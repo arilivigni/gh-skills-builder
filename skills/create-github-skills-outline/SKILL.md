@@ -17,6 +17,36 @@ Use this skill to design a self-paced GitHub Skills-style exercise before implem
 6. Identify repository files, workflows, and assets needed for implementation.
 7. Call out open questions instead of inventing domain details that affect correctness.
 
+## Step design requirements
+
+For each step in the learner journey, include:
+
+- `Theory`: awareness-level context only, directly tied to the activity.
+- `Activity`: concrete numbered actions a learner can perform in GitHub.
+- `Transition`: both an `Actions Trigger` and a `Grading-Check`.
+
+Keep the exercise scoped to the requested topic. If a concept is useful but out of scope, list it as a follow-up exercise instead of adding it to the current outline.
+
+## Reference guidance
+
+- Prefer official references (GitHub Docs, GitHub Learn, GitHub Blog/Changelog, and official VS Code docs).
+- Keep references relevant to the exact step content; do not add generic links that are not used.
+
+## Formatting conventions
+
+- Any image added for the exercise should be stored in `.github/images` and referenced with a relative path.
+- Keep GitHub callouts left-justified (no indentation) when using `[!NOTE]`, `[!IMPORTANT]`, or `[!TIP]`.
+- Use this exact style:
+
+> [!NOTE]
+> This is a note
+
+> [!IMPORTANT]
+> This is an important item to be aware of for this exercise
+
+> [!TIP]
+> It is a good idea and recommended to do this tip
+
 ## Outline template
 
 Return this structure by default:

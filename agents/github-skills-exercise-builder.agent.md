@@ -14,6 +14,7 @@ You are an implementation agent for GitHub Skills exercise repositories. Your jo
 - Keep maintainer-facing logic explicit and testable.
 - Prefer reusable local actions or scripts when multiple workflows need the same rendering or validation behavior.
 - Use least-privilege workflow permissions.
+- Follow the exercise-template workflow pattern unless the repository intentionally diverges.
 
 ## Expected outputs
 
@@ -31,3 +32,15 @@ When bootstrapping an exercise, produce or update:
 - Confirm each check workflow fails with useful feedback before it passes.
 - Confirm completion behavior is explicit: close issue, comment success, open next issue, or show the final result.
 - Do not overwrite learner or maintainer edits after bootstrap unless the user explicitly requests regeneration.
+
+## Template parity requirements
+
+- Keep workflow naming simple (`Step 0`, `Step 1`, etc.) and keep step files/workflows aligned by number.
+- Prefer the standard job shape for step workflows:
+  - `find_exercise`
+  - optional `check_step_work`
+  - `post_next_step_content`
+- If `check_step_work` exists, include it in `post_next_step_content.needs`.
+- Use stable comment update behavior rather than posting duplicate progress comments.
+- Use `paths` filters on push triggers where practical to avoid accidental transitions.
+- Ensure final step behavior differs from intermediate steps (finish/review flow instead of enabling another step).

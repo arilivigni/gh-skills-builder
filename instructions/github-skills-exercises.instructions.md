@@ -20,6 +20,15 @@ Use these instructions when working in a repository that implements a self-paced
 - Keep automation in `.github/workflows/` and reusable local actions in `.github/actions/`.
 - Document the exercise goal, audience, estimated duration, prerequisites, and reset/retry behavior in `README.md`.
 - Include a maintainer-facing test or validation guide for checking the exercise before release.
+- Keep step and workflow naming aligned (`N-step.md`, `N-step.yml`, workflow name `Step N`) unless the repository already uses a different consistent convention.
+
+## Step and workflow patterns
+
+- For each step, keep `Theory` concise and directly tied to the `Activity`.
+- Activity instructions should be numbered, action-oriented, and resilient to common mistakes.
+- For transitions, define both the GitHub event trigger and the grading/feedback check.
+- Prefer step workflow shape: `find_exercise`, optional `check_step_work`, then `post_next_step_content`.
+- If a grading job exists, gate transition on it and return actionable feedback on failure.
 
 ## Workflow safety
 

@@ -16,6 +16,19 @@ Use this skill for final release preparation after an exercise has been built an
 5. Prepare release or contribution copy.
 6. Identify any remaining risks and the owner of each follow-up.
 
+## If publishing a repository is requested
+
+Apply this safety sequence:
+
+1. Confirm target owner/repository and whether a remote already exists.
+2. Disable Actions before first push to avoid accidental workflow execution.
+3. Apply repository settings (template flag, description, visibility) as requested.
+4. Push repository content.
+5. Disable exercise workflows intentionally, then re-enable Actions platform-wide.
+6. Verify copy/start links reference the new template owner.
+
+If permissions block any step, report the exact failing command and shortest manual recovery path.
+
 ## Release-readiness checklist
 
 - README includes title, summary, learner audience, prerequisites, duration, start path, and support path.
@@ -24,7 +37,20 @@ Use this skill for final release preparation after an exercise has been built an
 - Validation evidence is available: tests, dry run, or documented manual checks.
 - Reset/retry behavior is documented and safe for repeated learners.
 - No source content contains repository-specific absolute URLs unless required.
+- Exercise images are stored in `.github/images` and referenced with relative paths.
+- `[!NOTE]`, `[!IMPORTANT]`, and `[!TIP]` callouts are left-justified (no indentation).
 - License, attribution, and contribution notes are present where needed.
+
+Expected callout formatting:
+
+> [!NOTE]
+> This is a note
+
+> [!IMPORTANT]
+> This is an important item to be aware of for this exercise
+
+> [!TIP]
+> It is a good idea and recommended to do this tip
 
 ## Output template
 

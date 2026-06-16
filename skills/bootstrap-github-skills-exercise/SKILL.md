@@ -27,6 +27,17 @@ Create or update the smallest coherent set of files:
 - `.github/actions/` or `scripts/`: shared rendering/validation helpers when repeated logic appears.
 - Tests or a maintainer validation guide for the exercise flow.
 
+## Workflow structure expectations
+
+When creating step workflows, prefer the standard GitHub Skills pattern:
+
+- `find_exercise` job to locate the learner issue/context.
+- optional `check_step_work` job for grading and targeted feedback.
+- `post_next_step_content` job for transition behavior.
+
+If `check_step_work` is present, include it in `post_next_step_content.needs`.
+Keep step naming and file mapping aligned (`Step N`, `N-step.yml`, `N-step.md`).
+
 ## Workflow design guidance
 
 - Use least-privilege `permissions`.
@@ -35,6 +46,23 @@ Create or update the smallest coherent set of files:
 - Prefer updating existing feedback comments over posting duplicates.
 - Avoid hardcoded repository-specific URLs in source Markdown; render them at runtime.
 - Prevent one-shot bootstrap workflows from overwriting legitimate later edits.
+- Use `paths` filters on push-based triggers where practical to avoid accidental transitions from unrelated commits.
+- Ensure the last step finishes the exercise instead of enabling a non-existent next step.
+
+## Content formatting conventions
+
+- Any image added for the exercise should be stored in `.github/images` and referenced with a relative path.
+- Keep GitHub callouts left-justified (no indentation) when using `[!NOTE]`, `[!IMPORTANT]`, or `[!TIP]`.
+- Use this exact style:
+
+> [!NOTE]
+> This is a note
+
+> [!IMPORTANT]
+> This is an important item to be aware of for this exercise
+
+> [!TIP]
+> It is a good idea and recommended to do this tip
 
 ## Completion criteria
 

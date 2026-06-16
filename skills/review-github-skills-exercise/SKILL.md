@@ -30,6 +30,7 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Failing states produce actionable messages.
 - Success criteria are neither too loose nor too brittle.
 - Re-running the exercise does not create confusing duplicate state.
+- Step workflow variables match the template variables used in rendered markdown.
 
 ### Workflow safety
 
@@ -37,13 +38,28 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Automation does not overwrite learner or maintainer work unexpectedly.
 - Issue comments use stable markers if they are updated.
 - Repository-specific links are rendered safely.
+- Step 0/start behavior does not require manual workflow disabling and leaves expected step workflows off.
 
 ### Accessibility and maintainability
 
 - Images have useful alt text.
+- Images are stored in `.github/images` and referenced with relative paths.
 - Links are descriptive.
 - Markdown is readable in GitHub.
 - Repeated logic is shared or documented.
+- Ordered activity steps render with correct numbering (no broken lists caused by mixed blocks).
+- `[!NOTE]`, `[!IMPORTANT]`, and `[!TIP]` callouts are left-justified (no indentation).
+
+Expected callout formatting:
+
+> [!NOTE]
+> This is a note
+
+> [!IMPORTANT]
+> This is an important item to be aware of for this exercise
+
+> [!TIP]
+> It is a good idea and recommended to do this tip
 
 ## Output format
 
