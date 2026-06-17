@@ -1,5 +1,48 @@
 Design, build, review, and publish GitHub Skills-style exercises with custom agents and Agent Skills for learner journeys, workflow-backed validation, and release readiness.
 
+## Installation
+
+### Copilot CLI
+
+Install directly from this repository:
+
+```shell
+copilot plugin install arilivigni/github-skills-exercises
+```
+
+Or from within an interactive Copilot session:
+
+```
+/plugin install arilivigni/github-skills-exercises
+```
+
+> [!NOTE]
+> This first adds `arilivigni/github-skills-exercises` as a plugin marketplace, then installs the plugin. You can verify the install with:
+> ```shell
+> copilot plugin list
+> ```
+
+To update to the latest version:
+
+```shell
+copilot plugin update github-skills-exercises
+```
+
+To remove the plugin:
+
+```shell
+copilot plugin uninstall github-skills-exercises
+```
+
+### Copilot in VS Code
+
+1. Open the Extensions view and type `@agentPlugins` in the search bar, **or** open the Command Palette (`⌘⇧P` / `Ctrl+Shift+P`) and run **Chat: Plugins**.
+2. Search for **github-skills-exercises**.
+3. Click **Install**.
+
+> [!TIP]
+> You can also open the Command Palette and run **Chat: Plugins** at any time to manage or disable installed plugins.
+
 ## What's Included
 
 ### Agents
