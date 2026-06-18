@@ -1,5 +1,5 @@
 {
-  "name": "github-skills-exercises",
+  "name": "gh-skills-builder",
   "description": "Design, build, review, and publish GitHub Skills-style exercises with custom agents and Agent Skills for learner journeys, workflow-backed validation, and release readiness.",
   "version": "1.0.0",
   "keywords": [
@@ -13,7 +13,7 @@
   "author": {
     "name": "Ari LiVigni"
   },
-  "repository": "https://github.com/arilivigni/github-skills-exercises",
+  "repository": "https://github.com/arilivigni/gh-skills-builder",
   "license": "MIT",
   "agents": [
     "./agents"

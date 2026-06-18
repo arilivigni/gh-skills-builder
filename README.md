@@ -7,17 +7,17 @@ Design, build, review, and publish GitHub Skills-style exercises with custom age
 Install directly from this repository:
 
 ```shell
-copilot plugin install arilivigni/github-skills-exercises
+copilot plugin install arilivigni/gh-skills-builder
 ```
 
 Or from within an interactive Copilot session:
 
 ```
-/plugin install arilivigni/github-skills-exercises
+/plugin install arilivigni/gh-skills-builder
 ```
 
 > [!NOTE]
-> This first adds `arilivigni/github-skills-exercises` as a plugin marketplace, then installs the plugin. You can verify the install with:
+> This first adds `arilivigni/gh-skills-builder` as a plugin marketplace, then installs the plugin. You can verify the install with:
 > ```shell
 > copilot plugin list
 > ```
@@ -25,19 +25,19 @@ Or from within an interactive Copilot session:
 To update to the latest version:
 
 ```shell
-copilot plugin update github-skills-exercises
+copilot plugin update gh-skills-builder
 ```
 
 To remove the plugin:
 
 ```shell
-copilot plugin uninstall github-skills-exercises
+copilot plugin uninstall gh-skills-builder
 ```
 
 ### Copilot in VS Code
 
 1. Open the Extensions view and type `@agentPlugins` in the search bar, **or** open the Command Palette (`⌘⇧P` / `Ctrl+Shift+P`) and run **Chat: Plugins**.
-2. Search for **github-skills-exercises**.
+2. Search for **gh-skills-builder**.
 3. Click **Install**.
 
 > [!TIP]
