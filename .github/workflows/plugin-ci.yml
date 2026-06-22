@@ -23,33 +23,76 @@ jobs:
         run: |
           python3 - <<'PY'
           import json
+          import re
           from pathlib import Path
 
-          root = Path(".")
+          root = Path(".").resolve()
           manifest_path = root / ".github/plugin/plugin.json"
           manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
           failures = []
+
+          def resolve_repo_relative_path(entry, key_name):
+            if not isinstance(entry, str):
+              failures.append(f'Entries in "{key_name}" must be strings. Got: {type(entry).__name__}')
+              return None
+
+            rel_path = Path(entry)
+            if rel_path.is_absolute():
+              failures.append(f'Absolute paths are not allowed in "{key_name}": {entry}')
+              return None
+
+            resolved = (root / rel_path).resolve()
+            try:
+              resolved.relative_to(root)
+            except ValueError:
+              failures.append(f'Path escapes repository root in "{key_name}": {entry}')
+              return None
+
+            return resolved
+
+          def extract_frontmatter(markdown_text):
+            match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|$)", markdown_text, flags=re.DOTALL)
+            if not match:
+              return None
+            return match.group(1)
 
           for key in ("agents", "skills"):
             entries = manifest.get(key, [])
             if not isinstance(entries, list):
               failures.append(f'"{key}" must be a list in {manifest_path}')
               continue
-            for rel in entries:
-              path = (root / rel).resolve()
+            for entry in entries:
+              path = resolve_repo_relative_path(entry, key)
+              if path is None:
+                continue
               if not path.exists():
-                failures.append(f'Missing referenced path in "{key}": {rel}')
+                failures.append(f'Missing referenced path in "{key}": {entry}')
 
           for skill_entry in manifest.get("skills", []):
-            skill_dir = root / skill_entry
+            skill_dir = resolve_repo_relative_path(skill_entry, "skills")
+            if skill_dir is None:
+              continue
             skill_md = skill_dir / "SKILL.md"
             if not skill_md.exists():
               failures.append(f'Missing SKILL.md in skill directory: {skill_entry}')
               continue
 
             text = skill_md.read_text(encoding="utf-8")
-            if "name:" not in text or "description:" not in text:
+            frontmatter = extract_frontmatter(text)
+            if frontmatter is None:
+              failures.append(f'SKILL.md is missing frontmatter block in {skill_entry}')
+              continue
+
+            keys = set()
+            for line in frontmatter.splitlines():
+              line = line.strip()
+              if not line or line.startswith("#") or ":" not in line:
+                continue
+              key, _ = line.split(":", 1)
+              keys.add(key.strip())
+
+            if "name" not in keys or "description" not in keys:
               failures.append(f'SKILL.md is missing required frontmatter fields in {skill_entry}')
 
           if failures:
@@ -68,7 +111,8 @@ jobs:
           from pathlib import Path
           from urllib.parse import urlparse
 
-          readme = Path("README.md")
+          repo_root = Path(".").resolve()
+          readme = repo_root / "README.md"
           text = readme.read_text(encoding="utf-8")
           pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
           failures = []
@@ -85,7 +129,14 @@ jobs:
             if not path_part:
               continue
 
-            resolved = (readme.parent / path_part).resolve()
+            base = repo_root if path_part.startswith("/") else readme.parent
+            resolved = (base / path_part.lstrip("/")).resolve()
+            try:
+              resolved.relative_to(repo_root)
+            except ValueError:
+              failures.append(f"Link escapes repository root: {clean}")
+              continue
+
             if not resolved.exists():
               failures.append(f"Broken local link target: {clean}")
 
