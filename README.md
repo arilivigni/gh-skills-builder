@@ -17,7 +17,7 @@ Or from within an interactive Copilot session:
 ```
 
 > [!NOTE]
-> This first adds `arilivigni/gh-skills-builder` as a plugin marketplace, then installs the plugin. You can verify the install with:
+> Installing from `arilivigni/gh-skills-builder` performs a direct repository install. You can verify the install with:
 > ```shell
 > copilot plugin list
 > ```
