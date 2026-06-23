@@ -21,6 +21,7 @@ Or from within an interactive Copilot session:
 > ```shell
 > copilot plugin list
 > ```
+> After install, manage the plugin by name (`gh-skills-builder`) for update and uninstall commands.
 
 To update to the latest version:
 
