@@ -21,6 +21,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -32,10 +36,17 @@ jobs:
 
       - name: Resolve and validate version
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" != "branch" || "${GITHUB_REF_NAME}" != "main" ]]; then
+            echo "::error::Releases must be created from refs/heads/main. Selected ref: ${GITHUB_REF_TYPE}/${GITHUB_REF_NAME}"
+            exit 1
+          fi
+
           manifest_version=$(python3 -c 'import json; print(json.load(open(".github/plugin/plugin.json"))["version"])')
-          input_version='${{ inputs.version }}'
+          input_version="${INPUT_VERSION:-}"
           version="${input_version:-$manifest_version}"
           version="${version#v}"
 
@@ -50,13 +61,21 @@ jobs:
           fi
 
           tag="v$version"
-          if git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "::error::Tag $tag already exists. Bump the version in plugin.json."
-            exit 1
+          git fetch --force --tags origin
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            tag_target="$(git rev-list -n 1 "$tag")"
+            if [[ "$tag_target" != "$GITHUB_SHA" ]]; then
+              echo "::error::Tag $tag already exists on $tag_target, expected $GITHUB_SHA."
+              exit 1
+            fi
+            tag_exists=true
+          else
+            tag_exists=false
           fi
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
           echo "Releasing $tag from ${GITHUB_SHA}"
 
       - name: Run plugin validation
@@ -67,6 +86,7 @@ jobs:
           test -d skills
 
       - name: Create and push tag
+        if: steps.version.outputs.tag_exists != 'true'
         env:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
@@ -88,5 +108,9 @@ jobs:
           fi
           if [[ "$DRAFT" == "true" ]]; then
             args+=(--draft)
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping create."
+            exit 0
           fi
           gh release create "$TAG" "${args[@]}"
