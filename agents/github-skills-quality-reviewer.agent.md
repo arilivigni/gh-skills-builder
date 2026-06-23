@@ -1,6 +1,6 @@
 ---
 description: "Reviews GitHub Skills exercises for learning quality, validation reliability, workflow safety, accessibility, and readiness."
-name: "GitHub Skills Quality Reviewer"
+name: "github-skills-quality-reviewer"
 tools: ["changes", "codebase", "fetch", "findTestFiles", "githubRepo", "runCommands", "runTests", "search", "terminalLastCommand", "testFailure"]
 model: "GPT-4.1"
 ---

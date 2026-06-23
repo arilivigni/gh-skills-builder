@@ -1,6 +1,6 @@
 ---
 description: "Builds GitHub Skills exercise repository scaffolds from approved outlines, including steps, workflows, and validation plans."
-name: "GitHub Skills Exercise Builder"
+name: "github-skills-exercise-builder"
 tools: ["changes", "codebase", "edit/editFiles", "fetch", "findTestFiles", "githubRepo", "new", "runCommands", "runTests", "search", "terminalLastCommand", "testFailure"]
 model: "GPT-4.1"
 ---

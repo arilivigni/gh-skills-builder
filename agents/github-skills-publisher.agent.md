@@ -1,6 +1,6 @@
 ---
 description: "Prepares GitHub Skills exercises for publication with release checks, README copy, validation evidence, and handoff notes."
-name: "GitHub Skills Publisher"
+name: "github-skills-publisher"
 tools: ["changes", "codebase", "edit/editFiles", "fetch", "githubRepo", "runCommands", "runTests", "search", "terminalLastCommand", "testFailure"]
 model: "GPT-4.1"
 ---

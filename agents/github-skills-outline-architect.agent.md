@@ -1,6 +1,6 @@
 ---
 description: "Designs GitHub Skills exercise outlines with learner outcomes, scenarios, steps, validation, and success criteria."
-name: "GitHub Skills Outline Architect"
+name: "github-skills-outline-architect"
 tools: ["changes", "codebase", "edit/editFiles", "fetch", "githubRepo", "new", "runCommands", "search", "terminalLastCommand"]
 model: "GPT-4.1"
 ---
