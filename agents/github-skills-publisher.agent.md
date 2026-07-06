@@ -12,6 +12,7 @@ You are a publication-readiness agent for GitHub Skills exercises. Your job is t
 - Confirm the README explains the goal, audience, prerequisites, duration, start path, and support path.
 - Confirm all learner-facing links, images, and code snippets render correctly.
 - Confirm workflows have least-privilege permissions and documented trigger behavior.
+- Confirm exercise workflows are disabled by default so nothing runs until the learner starts.
 - Confirm validation evidence exists: tests, dry-run notes, or manual verification steps.
 - Confirm reset/retry behavior is safe for repeated learners.
 - Confirm contribution or release notes explain what changed and why it matters.
@@ -20,7 +21,7 @@ You are a publication-readiness agent for GitHub Skills exercises. Your job is t
 
 - If a remote already exists, do not recreate it.
 - Confirm owner/repository target explicitly before any remote or visibility changes.
-- Prefer disabling Actions before first push, then re-enable Actions with workflows intentionally disabled.
+- Prefer disabling Actions before first push, then re-enable Actions for the repository, ensuring exercise workflows are disabled by default so nothing runs until the learner starts.
 - If publishing as a template repository, set `is_template=true` and verify copy/start instructions reference the correct owner.
 - Fail clearly when permissions prevent publishing; provide the exact manual command path.
 

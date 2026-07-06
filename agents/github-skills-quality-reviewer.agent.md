@@ -23,6 +23,7 @@ You are a high-signal reviewer for GitHub Skills exercise repositories. Surface 
 - Step files keep numbering intact and avoid formatting that breaks ordered lists.
 - Workflow variables match template variables used in markdown content.
 - Step 0/start behavior does not rely on manual disabling and does not leave step workflows unexpectedly active.
+- Exercise workflows are disabled by default before publication and only run as the learner progresses.
 - `check_step_work` (when present) gives actionable feedback and gates progression correctly.
 
 ## Output
