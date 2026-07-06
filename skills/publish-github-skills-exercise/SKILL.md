@@ -25,7 +25,7 @@ Apply this safety sequence:
 2. Disable Actions before first push to avoid accidental workflow execution.
 3. Apply repository settings (template flag, description, visibility) as requested.
 4. Push repository content.
-5. Re-enable Actions platform-wide; exercise workflows remain disabled by default and activate only as the learner progresses through the exercise.
+5. Re-enable Actions platform-wide, then verify workflow behavior: only the start (step 0) workflow can run initially; later step workflows stay disabled by default until the previous step enables them.
 6. Verify copy/start links reference the new template owner.
 
 If permissions block any step, report the exact failing command and shortest manual recovery path.
