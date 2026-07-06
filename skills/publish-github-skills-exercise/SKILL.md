@@ -12,9 +12,10 @@ Use this skill for final release preparation after an exercise has been built an
 1. Confirm the repository communicates the exercise clearly.
 2. Confirm the learner flow has been validated from a fresh start.
 3. Confirm workflow permissions, triggers, and reset behavior are safe.
-4. Confirm all images, links, snippets, and badges render correctly.
-5. Prepare release or contribution copy.
-6. Identify any remaining risks and the owner of each follow-up.
+4. Confirm exercise workflows are disabled by default so nothing runs until the learner starts.
+5. Confirm all images, links, snippets, and badges render correctly.
+6. Prepare release or contribution copy.
+7. Identify any remaining risks and the owner of each follow-up.
 
 ## If publishing a repository is requested
 
@@ -24,7 +25,7 @@ Apply this safety sequence:
 2. Disable Actions before first push to avoid accidental workflow execution.
 3. Apply repository settings (template flag, description, visibility) as requested.
 4. Push repository content.
-5. Disable exercise workflows intentionally, then re-enable Actions platform-wide.
+5. Keep exercise workflows disabled by default, then re-enable Actions platform-wide so only intended triggers can run.
 6. Verify copy/start links reference the new template owner.
 
 If permissions block any step, report the exact failing command and shortest manual recovery path.
@@ -34,6 +35,7 @@ If permissions block any step, report the exact failing command and shortest man
 - README includes title, summary, learner audience, prerequisites, duration, start path, and support path.
 - Exercise steps match the stated objectives.
 - Workflows use least-privilege permissions and have clear trigger behavior.
+- Exercise workflows are disabled by default and only activate as the learner progresses through the exercise.
 - Validation evidence is available: tests, dry run, or documented manual checks.
 - Reset/retry behavior is documented and safe for repeated learners.
 - No source content contains repository-specific absolute URLs unless required.

@@ -39,6 +39,7 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Issue comments use stable markers if they are updated.
 - Repository-specific links are rendered safely.
 - Step 0/start behavior does not require manual workflow disabling and leaves expected step workflows off.
+- Exercise workflows are disabled by default before publication and only activate as the learner progresses.
 
 ### Accessibility and maintainability
 
