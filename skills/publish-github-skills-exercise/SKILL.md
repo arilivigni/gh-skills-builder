@@ -35,7 +35,7 @@ If permissions block any step, report the exact failing command and shortest man
 - README includes title, summary, learner audience, prerequisites, duration, start path, and support path.
 - Exercise steps match the stated objectives.
 - Workflows use least-privilege permissions and have clear trigger behavior.
-- Exercise workflows are disabled by default and only activate as the learner progresses through the exercise.
+- Exercise workflows are disabled by default and only run as the learner progresses through the exercise.
 - Validation evidence is available: tests, dry run, or documented manual checks.
 - Reset/retry behavior is documented and safe for repeated learners.
 - No source content contains repository-specific absolute URLs unless required.
