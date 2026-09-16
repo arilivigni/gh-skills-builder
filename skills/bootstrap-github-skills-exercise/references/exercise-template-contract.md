@@ -631,7 +631,14 @@ Run these before reporting the bootstrap complete:
 >
 > ```bash
 > # No placeholder text left behind
-> grep -rn "replace-me" README.md .github/ || echo "no placeholders"
+> if grep -Rni "replace-me" README.md .github/; then
+>   echo "placeholder text found" >&2
+>   exit 1
+> else
+>   status=$?
+>   if [ "$status" -ne 1 ]; then exit "$status"; fi
+>   echo "no placeholders"
+> fi
 >
 > # Step content and step workflows line up
 > ls .github/steps/ .github/workflows/
