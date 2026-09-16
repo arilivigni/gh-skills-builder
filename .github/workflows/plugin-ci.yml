@@ -104,6 +104,12 @@ jobs:
           print("Plugin reference validation passed.")
           PY
 
+      - name: Install validation dependencies
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Validate plugin content consistency
+        run: python3 scripts/validate-content.py --online
+
       - name: Validate README local markdown links
         run: |
           python3 - <<'PY'

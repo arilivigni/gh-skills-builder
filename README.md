@@ -193,6 +193,30 @@ This plugin follows strict semantic versioning:
 - referenced agent and skill paths from the plugin manifest
 - required `name` and `description` metadata presence in each skill `SKILL.md`
 - local markdown links in `README.md`
+- content consistency via `scripts/validate-content.py`
+
+### Content validation
+
+`scripts/validate-content.py` guards the conventions this plugin teaches. Run it locally:
+
+```shell
+python3 -m pip install pyyaml
+python3 scripts/validate-content.py          # offline checks
+python3 scripts/validate-content.py --online # also verify the pinned toolkit tag resolves
+```
+
+It checks that:
+
+| Check | Catches |
+| --- | --- |
+| Agent frontmatter | Missing `name`/`description`, names that are not lowercase kebab-case, or names that disagree with the filename. The manifest only references `./agents` as a directory, so nothing else validates these. |
+| Skill registration | A skill with a `SKILL.md` that was never added to `plugin.json`. |
+| Code fence balance | An unclosed fence that silently swallows the rest of a document. |
+| YAML blocks | A workflow skeleton that does not parse. These get copy-pasted into real exercises. |
+| Toolkit ref consistency | Mixed `skills/exercise-toolkit` refs, for example bumping nine of ten pins. |
+| Contract self-consistency | The contract's own step skeleton losing its Theory or Activity block, which would contradict the rule it imposes. |
+| Badge canonicalization | Restyled or recolored prompt/terminal badges. |
+| Pinned tag resolves (`--online`) | Pinning a draft release, whose git tag does not exist and which breaks every generated workflow. |
 
 ### Deployment plan
 
