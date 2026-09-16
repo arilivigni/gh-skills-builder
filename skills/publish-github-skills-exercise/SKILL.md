@@ -97,7 +97,8 @@ Post-transfer fixes, all of which are commonly missed:
 4. Re-check any absolute links, badges, or `uses:` references that name the old owner.
 5. Re-check repository secrets, variables, and branch protection; these do not always carry over.
 6. Confirm the destination org's Actions policy allows the actions this exercise uses
-   (`skills/exercise-toolkit`, `GrantBirki/comment`, `peter-evans/find-comment`).
+   (`actions/checkout`, `skills/exercise-toolkit`, `skills/action-keyphrase-checker` when used, `GrantBirki/comment`,
+   `peter-evans/find-comment`).
 
 ### Failure handling
 
