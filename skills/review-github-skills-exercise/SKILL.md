@@ -48,6 +48,9 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - If `check_step_work` exists, `post_next_step_content.needs` includes it; if it was removed, `needs` is back
   to `[find_exercise]`.
 - The start workflow is guarded with `if: !github.event.repository.is_template`.
+- The start workflow has a real first-run trigger, not only `workflow_dispatch`, unless the README explicitly
+  tells the learner to start it manually. A README promising an automatic start with no event behind it
+  leaves the learner on an apparently broken repository.
 - No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
 - The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
 

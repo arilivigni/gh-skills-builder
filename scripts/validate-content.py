@@ -7,8 +7,9 @@ Run locally with:
     python3 scripts/validate-content.py
 
 Use --online to additionally verify that the pinned exercise-toolkit tag
-resolves on GitHub. That check needs network access and is not run in the
-pull request gate.
+resolves on GitHub. That check needs network access and is run in the pull
+request gate, where it only fails on a definitive 404; other network errors
+warn instead, so it does not make CI flaky.
 """
 
 from __future__ import annotations
@@ -154,24 +155,87 @@ def check_yaml_blocks() -> None:
         fail("yaml", "no YAML blocks found; the contract reference should contain workflow skeletons")
 
 
-def check_toolkit_refs() -> tuple[str | None, set[str]]:
-    """The contract tells authors never to mix toolkit refs. The contract itself
-    must not mix them either."""
-    refs: set[str] = set()
+def _walk(node):
+    """Yield every mapping in a parsed YAML document."""
+    if isinstance(node, dict):
+        yield node
+        for value in node.values():
+            yield from _walk(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _walk(value)
+
+
+def collect_toolkit_refs() -> dict[str, set[str]]:
+    """Collect every exercise-toolkit ref, in both the `uses:` and the toolkit
+    `actions/checkout` `ref:` form.
+
+    Parsing the YAML rather than grepping matters here: `0-start-exercise.yml`
+    contains `ref: main` for a checkout of the *exercise* repository, which a
+    naive `ref:` grep would wrongly report as an unpinned toolkit ref.
+    """
+    try:
+        import yaml
+    except ImportError:
+        return {}
+
+    refs: dict[str, set[str]] = {}
+
+    def record(ref: str, where: str) -> None:
+        refs.setdefault(ref, set()).add(where)
+
     for path in markdown_files():
+        rel = str(path.relative_to(ROOT))
         text = read(path)
-        refs |= set(re.findall(r"exercise-toolkit[^\s`\"']*@(v[0-9]+\.[0-9]+\.[0-9]+)", text))
-        refs |= set(re.findall(r"^\s*ref:\s*(v[0-9]+\.[0-9]+\.[0-9]+)", text, flags=re.MULTILINE))
 
-    # v0.9.1 is referenced once as prose describing what skills/exercise-template
-    # itself pins. Only pinned refs in skeletons must agree.
-    pinned = {r for r in refs if r != "v0.9.1"} or refs
+        for match in re.finditer(r"^([ ]*)```yaml\n(.*?)^\1```$", text, flags=re.DOTALL | re.MULTILINE):
+            try:
+                document = yaml.safe_load(textwrap.dedent(match.group(2)))
+            except Exception:  # noqa: BLE001 - reported by check_yaml_blocks
+                continue
 
-    if len(pinned) > 1:
-        fail("toolkit-ref", f"mixed exercise-toolkit refs in documentation: {sorted(pinned)}")
-        return None, pinned
+            for mapping in _walk(document):
+                uses = mapping.get("uses")
+                if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
+                    record(uses.rsplit("@", 1)[1], rel)
 
-    return (next(iter(pinned)) if pinned else None), pinned
+                if mapping.get("repository") == "skills/exercise-toolkit" and "ref" in mapping:
+                    record(str(mapping["ref"]), rel)
+
+        # Refs mentioned in prose, outside any YAML block. Placeholders such as
+        # `@<ref>` are documentation, not real pins.
+        for ref in re.findall(r"exercise-toolkit[^\s`\"']*@([^\s`\"')]+)", text):
+            if "<" in ref or ">" in ref or ref in {"ref", "tag"}:
+                continue
+            record(ref, rel)
+
+    return refs
+
+
+def check_toolkit_refs() -> str | None:
+    """The contract tells authors never to mix toolkit refs and never to use
+    `@main`. The contract itself must obey both rules, and the check must be
+    able to see a non-semver ref in order to reject it."""
+    refs = collect_toolkit_refs()
+    if not refs:
+        fail("toolkit-ref", "no exercise-toolkit references found")
+        return None
+
+    tag_pattern = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+$")
+
+    non_tags = {ref: where for ref, where in refs.items() if not tag_pattern.fullmatch(ref)}
+    for ref, where in sorted(non_tags.items()):
+        fail("toolkit-ref", f"exercise-toolkit ref '{ref}' is not a release tag (in {', '.join(sorted(where))})")
+
+    tags = {ref for ref in refs if tag_pattern.fullmatch(ref)}
+    if len(tags) > 1:
+        fail("toolkit-ref", f"mixed exercise-toolkit refs: {sorted(tags)}")
+        return None
+
+    if non_tags:
+        return None
+
+    return next(iter(tags)) if tags else None
 
 
 def check_contract_self_consistency() -> None:
@@ -255,7 +319,7 @@ def main() -> int:
     check_skill_registration()
     check_fence_balance()
     check_yaml_blocks()
-    ref, _ = check_toolkit_refs()
+    ref = check_toolkit_refs()
     check_contract_self_consistency()
     check_badges()
 

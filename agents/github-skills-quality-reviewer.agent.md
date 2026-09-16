@@ -36,6 +36,8 @@ You are a high-signal reviewer for GitHub Skills exercise repositories. Surface 
   resolves (draft releases have no git tag and break every workflow).
 - `post_next_step_content.needs` matches whether `check_step_work` exists.
 - The start workflow is guarded with `if: !github.event.repository.is_template`.
+- The start workflow has a real first-run trigger, not only `workflow_dispatch`, unless the README tells the
+  learner to start it manually.
 - No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
 - The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
 

@@ -31,22 +31,31 @@ Confirm which path applies before running anything:
 ### Path A: publish to a personal account or organization
 
 1. Confirm target owner/repository and whether a remote already exists.
-2. If the target repository does not exist, confirm you have permission to create repositories in the target owner. For
+2. **Confirm the intended visibility explicitly.** Ask the user whether the exercise should be public or
+   private, and use the matching flag. Never default to public: a repository meant to be private is exposed
+   the moment it is created, and flipping the flag afterwards does not undo that exposure.
+
+   Public is the common choice for GitHub Skills exercises, because private repositories consume Actions
+   minutes. Surface that as a recommendation, not as a silent default.
+
+3. If the target repository does not exist, confirm you have permission to create repositories in the target owner. For
    an organization, that is the `Create repositories` permission, plus admin on the new repository to set the
    template flag. If it already exists, confirm admin access to change its Actions and template settings.
-3. If the target repository does not exist, create it with Actions disabled before any content exists, so nothing
-   runs on first push. If it already exists, do not run `gh repo create`; disable Actions before pushing:
+4. If the target repository does not exist, create it with Actions disabled before any content exists, so nothing
+   runs on first push. If it already exists, do not run `gh repo create`; disable Actions before pushing, and
+   do not change the existing repository's visibility unless the user explicitly asks for that change:
 
    > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
    >
    > ```bash
    > # Run the create command only for a new repository.
-   > gh repo create ORG/REPO --public --description "Exercise: TITLE"
+   > # VISIBILITY is --public or --private, exactly as the user confirmed above.
+   > gh repo create ORG/REPO VISIBILITY --description "Exercise: TITLE"
    > gh api -X PUT repos/ORG/REPO/actions/permissions -F enabled=false
    > ```
 
-4. Push repository content.
-5. Apply repository settings:
+5. Push repository content.
+6. Apply repository settings:
 
    > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
    >
@@ -55,7 +64,7 @@ Confirm which path applies before running anything:
    > gh api -X PUT repos/ORG/REPO/topics -f names[]=skills-exercise
    > ```
 
-6. Re-enable Actions, then set the workflow enablement state:
+7. Re-enable Actions, then set the workflow enablement state:
 
    > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
    >
@@ -64,9 +73,10 @@ Confirm which path applies before running anything:
    > gh workflow list --all --repo ORG/REPO
    > ```
 
-7. Verify only the start workflow (`Step 0`) is enabled. Disable every later step workflow; they are enabled
+8. Verify only the start workflow (`Step 0`) is enabled. Disable every later step workflow; they are enabled
    by the preceding step as the learner progresses.
-8. Verify the README Copy Exercise badge uses the published `template_owner` and `template_name`.
+9. Verify the README Copy Exercise badge uses the published `template_owner` and `template_name`, and that its
+   `visibility` parameter matches the visibility the user confirmed.
 
 ### Path B: transfer between organizations
 

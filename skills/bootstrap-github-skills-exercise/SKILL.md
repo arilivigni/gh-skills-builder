@@ -206,6 +206,9 @@ Do not report the bootstrap as done until all of these hold:
 7. Each graded step's `post_next_step_content.needs` matches whether `check_step_work` exists.
 8. All workflow YAML parses.
 9. The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
+10. The start workflow has a real first-run trigger enabled, not only `workflow_dispatch` — or the README
+    explicitly tells the learner to start the exercise by running the workflow manually. The advertised
+    "copy and wait" start path must have an event behind it.
 
 The contract reference includes a copy-ready command block for checks 1 through 8.
 

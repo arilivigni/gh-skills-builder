@@ -81,9 +81,12 @@ Rules:
 
 | Workflow | Inputs | Outputs |
 | --- | --- | --- |
-| `skills/exercise-toolkit/.github/workflows/start-exercise.yml` | `exercise-title`, `intro-message` | `issue-number` |
-| `skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml` | none | `issue-number`, `issue-url` |
-| `skills/exercise-toolkit/.github/workflows/finish-exercise.yml` | `issue-url`, `exercise-title` | none |
+| `skills/exercise-toolkit/.github/workflows/start-exercise.yml` | `exercise-title` (required), `intro-message` (required), `issue-title-prefix` (optional) | `issue-number`, `issue-url` |
+| `skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml` | `issue-title-text` (optional) | `issue-number`, `issue-url` |
+| `skills/exercise-toolkit/.github/workflows/finish-exercise.yml` | `issue-url` (required), `exercise-title` (optional), `update-readme-with-congratulations` (optional, boolean) | none |
+
+Verified against `v0.9.3`. If you pin a different tag, re-read the `workflow_call` block of each workflow
+rather than assuming these signatures still hold.
 
 ## Toolkit actions
 
@@ -162,6 +165,14 @@ equivalent.
   author to choose. Uncomment and scope the trigger to the step's actual learner action. Prefer `paths`
   filters on `push` triggers so unrelated commits do not advance the exercise.
 
+> [!IMPORTANT]
+> The start workflow is the exception: it must have a real first-run trigger enabled before publishing.
+> The README tells the learner to copy the repository and wait about 20 seconds for the first lesson. If
+> `0-start-exercise.yml` ships with only `workflow_dispatch`, nothing creates the welcome issue and the
+> learner is stuck on a repository that appears broken. Either enable the `push` trigger (with the repository
+> marked as a template, plus the `is_template` job guard), or change the README to tell the learner to run
+> the workflow manually. Do not ship the advertised automatic start with no event behind it.
+
 ## Workflow skeletons
 
 ### `0-start-exercise.yml`
@@ -171,10 +182,13 @@ name: Step 0 # Start Exercise
 
 on:
   workflow_dispatch:
-  # NOTE: Make sure the repository is a template before enabling this trigger.
-  # push:
-  #   branches:
-  #     - main
+  # Required for the advertised "copy the repo and wait ~20 seconds" start path.
+  # Uncomment before publishing, and make the repository a template first so the
+  # workflow does not run in the template itself. The `start_exercise` job is
+  # additionally guarded with `!github.event.repository.is_template` below.
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -643,8 +657,38 @@ Run these before reporting the bootstrap complete:
 > # Step content and step workflows line up
 > ls .github/steps/ .github/workflows/
 >
-> # Every toolkit reference uses the same pinned tag
-> grep -rhno "exercise-toolkit[^ ]*@v[0-9.]*" .github/workflows/ | sort -u
+> # Every toolkit reference is the same release tag.
+> # Covers both forms: `uses: skills/exercise-toolkit/...@<ref>` and the toolkit
+> # `actions/checkout` `ref:` value. Any ref that is not vX.Y.Z (for example
+> # `main` or a SHA) is reported as a failure.
+> python3 - <<'PY'
+> import pathlib, re, sys, yaml
+>
+> refs = {}
+> def walk(node):
+>     if isinstance(node, dict):
+>         yield node
+>         for value in node.values():
+>             yield from walk(value)
+>     elif isinstance(node, list):
+>         for value in node:
+>             yield from walk(value)
+>
+> for path in sorted(pathlib.Path(".github/workflows").glob("*.yml")):
+>     for mapping in walk(yaml.safe_load(path.read_text(encoding="utf-8"))):
+>         uses = mapping.get("uses")
+>         if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
+>             refs.setdefault(uses.rsplit("@", 1)[1], set()).add(str(path))
+>         if mapping.get("repository") == "skills/exercise-toolkit" and "ref" in mapping:
+>             refs.setdefault(str(mapping["ref"]), set()).add(str(path))
+>
+> bad = {r: f for r, f in refs.items() if not re.fullmatch(r"v\d+\.\d+\.\d+", r)}
+> if bad:
+>     sys.exit(f"non-tag toolkit refs: { {r: sorted(f) for r, f in bad.items()} }")
+> if len(refs) > 1:
+>     sys.exit(f"mixed toolkit refs: { {r: sorted(f) for r, f in refs.items()} }")
+> print("toolkit ref:", next(iter(refs), "none found"))
+> PY
 >
 > # The pinned tag actually exists (drafts have no tag)
 > gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref  # replace TAG with the selected repo-wide tag

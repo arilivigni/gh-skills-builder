@@ -17,6 +17,7 @@ You are a publication-readiness agent for GitHub Skills exercises. Your job is t
 - Confirm all learner-facing links, images, and code snippets render correctly.
 - Confirm workflows have least-privilege permissions and documented trigger behavior.
 - Confirm exercise workflows are disabled by default so nothing runs until the learner starts.
+- Confirm the start workflow has a real first-run trigger, or that the README documents a manual start.
 - Confirm validation evidence exists: tests, dry-run notes, or manual verification steps.
 - Confirm reset/retry behavior is safe for repeated learners.
 - Confirm contribution or release notes explain what changed and why it matters.
@@ -31,14 +32,19 @@ organizations.
 
 ### Publish to an account or organization
 
-- If a remote already exists, do not recreate it.
+- If a remote already exists, do not recreate it, and do not change its visibility unless the user explicitly
+  asks for that change.
 - Confirm the target owner/repository explicitly before any remote or visibility changes.
+- **Confirm visibility explicitly before creating anything.** Ask whether the exercise should be public or
+  private and pass the matching flag. Never default to `--public`: a repository meant to be private is
+  exposed the moment it is created. Public is the usual choice for Skills exercises because private
+  repositories consume Actions minutes, but surface that as a recommendation, not a silent default.
 - Disable Actions before first push (`gh api -X PUT repos/ORG/REPO/actions/permissions -F enabled=false`),
   push content, apply settings, then re-enable Actions.
 - Verify only the start workflow (`Step 0`) is enabled; later step workflows stay disabled until the previous
   step enables them.
 - If publishing as a template repository, set `is_template=true` and verify the README Copy Exercise badge
-  references the correct `template_owner` and `template_name`.
+  references the correct `template_owner`, `template_name`, and `visibility`.
 
 ### Transfer between organizations
 
