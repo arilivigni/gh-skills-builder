@@ -11,11 +11,24 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 
 1. Read the README and identify the promised learner outcome.
 2. Trace the learner journey from start through completion.
-3. Inspect workflows, local actions, scripts, and templates that drive validation or feedback.
-4. Check tests or validation docs.
-5. Report only findings that affect learning, reliability, safety, accessibility, or publication.
+3. Verify every step has a Theory block with real content and at least one Activity block.
+4. Inspect workflows, local actions, scripts, and templates that drive validation or feedback.
+5. Check template parity: file/workflow numbering, toolkit ref consistency, chaining, and leftover
+   placeholders.
+6. Check tests or validation docs.
+7. Report only findings that affect learning, reliability, safety, accessibility, or publication.
 
 ## Rubric
+
+### Step content completeness (blocking)
+
+- Every `.github/steps/N-step.md` has exactly one `### 📖 Theory:` heading followed by real
+  awareness-level content. A Theory heading with no content, or a step with no Theory block, is a blocking
+  finding.
+- Every step has at least one `### ⌨️ Activity:` heading with actionable numbered instructions. A step with
+  no Activity block is a blocking finding.
+- Theory content is tied to the Activity in the same step, not generic background.
+- Every step has a `Having trouble? 🤷` recovery block.
 
 ### Learner experience
 
@@ -24,6 +37,27 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Feedback helps the learner recover from common mistakes.
 - Completion is visible and satisfying.
 
+### Template parity
+
+- Step files and step workflows align by number (`N-step.md` ↔ `N-step.yml` ↔ `name: Step N`).
+- The final workflow is `N-last-step.yml` and posts `.github/steps/x-review.md`.
+- Every `gh workflow enable "Step N"` names a workflow that exists.
+- Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists.
+- Every `skills/exercise-toolkit` reference uses the same pinned release tag, and none use `@main`.
+- If `check_step_work` exists, `post_next_step_content.needs` includes it; if it was removed, `needs` is back
+  to `[find_exercise]`.
+- The start workflow is guarded with `if: !github.event.repository.is_template`.
+- No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
+- The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
+
+### Activity block conventions
+
+- Every Copilot prompt and terminal command inside an Activity uses a badge-led blockquote.
+- Copilot Chat/IDE prompts use the purple `Prompt` badge; Copilot CLI prompts use the `CLI-Prompt` badge;
+  terminal commands use the blue `Terminal` badge.
+- Badge URLs are unmodified and alt text is `Static Badge`.
+- Blockquote indentation aligns under its numbered list item so ordered-list numbering does not break.
+
 ### Validation reliability
 
 - Checks verify the intended behavior.
@@ -31,6 +65,8 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Success criteria are neither too loose nor too brittle.
 - Re-running the exercise does not create confusing duplicate state.
 - Step workflow variables match the template variables used in rendered markdown.
+- Every grading check uses `continue-on-error: true` with a matching `results_table` row, and the job closes
+  with `if: contains(steps.*.outcome, 'failure')`.
 
 ### Workflow safety
 

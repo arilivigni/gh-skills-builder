@@ -5,7 +5,24 @@ description: "Bootstrap a GitHub Skills exercise repository from an approved out
 
 # Bootstrap GitHub Skills exercise
 
-Use this skill when an outline is ready and the user wants repository content or automation.
+Use this skill when an outline is approved and the user wants repository content or automation.
+
+> [!IMPORTANT]
+> Read `references/exercise-template-contract.md` before writing files. It holds the exact file names,
+> workflow skeletons, reusable workflow inputs and outputs, action pins, chaining rules, and Markdown
+> skeletons implemented by `skills/exercise-template` and `skills/exercise-toolkit`. Follow it unless the
+> target repository intentionally diverges, and say so when you diverge.
+
+## Preconditions
+
+Do not start until you have:
+
+1. An approved outline. If none exists, run `create-github-skills-outline` first.
+2. A step-by-step journey where **every step has a Theory block and at least one Activity block**.
+3. A decision for each step on whether it is graded and what the grading check asserts.
+
+If the outline is missing a Theory or an Activity for any step, stop and resolve it with the user. Do not
+invent filler content to fill the gap.
 
 ## First inspect the repo
 
@@ -13,46 +30,136 @@ Before editing, identify existing conventions:
 
 - Where learner steps live.
 - How workflows create issues, post comments, and validate progress.
+- Which `skills/exercise-toolkit` ref the repository already pins.
 - Whether reusable local actions or scripts already render Markdown templates.
 - Existing test commands or workflow harnesses.
 
-## Bootstrap outputs
+## Build order
 
-Create or update the smallest coherent set of files:
+Work in this order so each file can reference something that already exists:
 
-- `README.md`: goal, audience, prerequisites, duration, start instructions, and reset/retry behavior.
-- `.github/steps/`: learner-facing step instructions.
-- `.github/markdown-templates/`: issue and comment templates when workflow-published content is needed.
-- `.github/workflows/`: start, check, feedback, and completion workflows.
-- `.github/actions/` or `scripts/`: shared rendering/validation helpers when repeated logic appears.
-- Tests or a maintainer validation guide for the exercise flow.
+1. `README.md` — title, Welcome block, objectives, Copy Exercise badge, troubleshooting details.
+2. `.github/steps/N-step.md` for every step.
+3. `.github/steps/x-review.md`.
+4. `.github/workflows/0-start-exercise.yml`.
+5. `.github/workflows/N-step.yml` for each intermediate step.
+6. `.github/workflows/N-last-step.yml`.
+7. Grading jobs, local actions, or scripts.
+8. Maintainer validation notes.
+
+## Required file set
+
+| File | Required |
+| --- | --- |
+| `README.md` | always |
+| `.github/steps/N-step.md` | one per step |
+| `.github/steps/x-review.md` | always |
+| `.github/workflows/0-start-exercise.yml` | always |
+| `.github/workflows/N-step.yml` | one per intermediate step |
+| `.github/workflows/N-last-step.yml` | always |
+| `.github/images/` | when the exercise uses images |
+| `LICENSE`, `.gitignore` | for a new standalone exercise repository |
+
+## Markdown templates
+
+Feedback templates come from `skills/exercise-toolkit` and are consumed by checking the toolkit out into the
+workspace:
+
+```yaml
+- name: Get response templates
+  uses: actions/checkout@v6
+  with:
+    repository: skills/exercise-toolkit
+    path: exercise-toolkit
+    ref: v0.9.1
+```
+
+Do not copy toolkit templates into the exercise repository. Create a local `.github/markdown-templates/`
+directory only for exercise-specific copy that has no toolkit equivalent.
 
 ## Workflow structure expectations
 
-When creating step workflows, prefer the standard GitHub Skills pattern:
+Follow the standard job shape from the contract reference:
 
-- `find_exercise` job to locate the learner issue/context.
-- optional `check_step_work` job for grading and targeted feedback.
-- `post_next_step_content` job for transition behavior.
+- `find_exercise` to locate the learner issue and its number/URL.
+- optional `check_step_work` for grading and targeted feedback.
+- `post_next_step_content` for transition behavior.
 
-If `check_step_work` is present, include it in `post_next_step_content.needs`.
-Keep step naming and file mapping aligned (`Step N`, `N-step.yml`, `N-step.md`).
+If `check_step_work` is present, include it in `post_next_step_content.needs`. If you remove it, reduce
+`needs` back to `[find_exercise]`.
 
 ## Workflow design guidance
 
-- Use least-privilege `permissions`.
-- Keep workflow inputs, outputs, and comment markers stable.
-- Make check workflows fail helpfully before they pass.
-- Prefer updating existing feedback comments over posting duplicates.
+- Use least-privilege `permissions` per the contract reference matrix.
+- Pin every action and reusable workflow. Use one `skills/exercise-toolkit` ref across the whole repository.
+- Only `Step 0` is enabled on a fresh copy. Every other step workflow ships disabled and is enabled by the
+  previous step.
+- Guard the start workflow with `if: !github.event.repository.is_template`.
+- Make check workflows fail helpfully before they pass. Every check uses `continue-on-error: true` and a row
+  in the `step-results-table.md` `results_table`.
+- Update the existing feedback comment via `peter-evans/find-comment` rather than posting duplicates.
 - Avoid hardcoded repository-specific URLs in source Markdown; render them at runtime.
 - Prevent one-shot bootstrap workflows from overwriting legitimate later edits.
-- Use `paths` filters on push-based triggers where practical to avoid accidental transitions from unrelated commits.
+- Use `paths` filters on push-based triggers where practical to avoid accidental transitions from unrelated
+  commits.
 - Ensure the last step finishes the exercise instead of enabling a non-existent next step.
+
+## Step content requirements
+
+Every `.github/steps/N-step.md` must contain:
+
+- one `## Step N: <name>` heading,
+- exactly one `### 📖 Theory: <title>` heading followed by real awareness-level content,
+- at least one `### ⌨️ Activity: <title>` heading followed by numbered instructions,
+- a `Having trouble? 🤷` `<details>` block with recovery hints.
+
+## Activity block conventions
+
+Inside an Activity, every Copilot prompt and every terminal command uses a badge-led blockquote: badge line,
+a bare `>` line, then the fenced block inside the same blockquote, indented to align under its numbered list
+item. Use the badge URLs verbatim and keep the alt text `Static Badge`.
+
+Copilot Chat / IDE prompt:
+
+```markdown
+1. Ask Copilot Chat to summarize the change.
+
+   > ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)
+   >
+   > ```text
+   > Summarize the changes in this pull request.
+   > ```
+```
+
+Copilot CLI prompt:
+
+```markdown
+1. Run the prompt with Copilot CLI.
+
+   > ![Static Badge](https://img.shields.io/badge/CLI-Prompt-text?style=flat-square&logo=github-copilot&labelColor=8250df&color=fbefff)
+   >
+   > ```text
+   > Explain what this workflow does.
+   > ```
+```
+
+Terminal command:
+
+```markdown
+1. Run the command.
+
+   > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
+   >
+   > ```bash
+   > gh repo view
+   > ```
+```
 
 ## Content formatting conventions
 
-- Any image added for the exercise should be stored in `.github/images` and referenced with a relative path.
-- Keep GitHub callouts left-justified (no indentation) when using `[!NOTE]`, `[!IMPORTANT]`, or `[!TIP]`.
+- Store exercise images in `.github/images` and reference them with a relative path such as
+  `../images/inspectocat.png`. Always provide meaningful alt text.
+- Keep GitHub callouts left-justified (no indentation) when they are not nested in a list item.
 - Use this exact style:
 
 > [!NOTE]
@@ -64,12 +171,30 @@ Keep step naming and file mapping aligned (`Step N`, `N-step.yml`, `N-step.md`).
 > [!TIP]
 > It is a good idea and recommended to do this tip
 
-## Completion criteria
+## Completion gates
 
-Before declaring the bootstrap done, verify the file set supports:
+Do not report the bootstrap as done until all of these hold:
 
-1. A clear starting point.
-2. Step-by-step learner progression.
-3. Automated or documented validation.
-4. Clear completion feedback.
-5. Maintainer instructions for local or CI validation.
+1. No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
+2. Every step file has exactly one Theory heading with content and at least one Activity heading with
+   numbered instructions.
+3. Step content and step workflows line up by number, and the final workflow is `N-last-step.yml`.
+4. Every `gh workflow enable "Step N"` names a workflow that exists.
+5. Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists.
+6. Every `skills/exercise-toolkit` reference uses the same pinned tag.
+7. Each graded step's `post_next_step_content.needs` matches whether `check_step_work` exists.
+8. All workflow YAML parses.
+9. The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
+
+The contract reference includes a copy-ready command block for checks 1 through 8.
+
+## Report back
+
+When the build round finishes, tell the user:
+
+- the files created or changed,
+- which steps are graded and what each grading check asserts,
+- anything you had to decide on their behalf,
+- what to review first.
+
+Then stop and wait for approval or change requests before starting another round.

@@ -53,58 +53,120 @@ copilot plugin uninstall gh-skills-builder
 
 | Agent | Mention | Role | Tool Access |
 | --- | --- | --- | --- |
+| **Orchestrator** | `@github-skills-orchestrator` | Runs the full lifecycle as an approval-gated loop, checking in with you after every build round and every review round. | Full coding and test tools |
 | **Outline Architect** | `@github-skills-outline-architect` | Converts an idea, workshop, or demo into a learner-centered exercise outline with objectives, scenario, steps, validation, and success criteria. | Read, search, fetch, and edit planning docs |
 | **Exercise Builder** | `@github-skills-exercise-builder` | Converts an approved outline into repository structure, Markdown steps, issue flow, workflows, and validation scaffolding. | Full coding and test tools |
 | **Quality Reviewer** | `@github-skills-quality-reviewer` | Reviews an exercise for learning value, validation reliability, workflow safety, accessibility, and publish readiness. | Read, search, run commands, and run tests |
-| **Publisher** | `@github-skills-publisher` | Prepares release notes, PR descriptions, validation evidence, final checklist, and publication handoff guidance. | Read, edit docs, run commands, and run tests |
+| **Publisher** | `@github-skills-publisher` | Prepares release notes, PR descriptions, validation evidence, final checklist, and publication or org transfer guidance. | Read, edit docs, run commands, and run tests |
 
 ### Skills
 
-The plugin provides four lifecycle skills:
+The plugin provides five lifecycle skills:
 
+- `/orchestrate-github-skills-exercise` — run the whole loop with approval gates between every round.
 - `/create-github-skills-outline` — design a new exercise or convert training material into a self-paced GitHub Skills outline.
 - `/bootstrap-github-skills-exercise` — create repository files, step Markdown, workflow plans, validation scripts, and starter structure from an approved outline.
 - `/review-github-skills-exercise` — audit an exercise for learner experience, validation correctness, workflow safety, accessibility, and readiness.
-- `/publish-github-skills-exercise` — prepare final checklist, release notes, PR copy, validation evidence, and launch guidance.
+- `/publish-github-skills-exercise` — prepare final checklist, release notes, PR copy, validation evidence, and publish or transfer guidance.
+
+### Template contract reference
+
+`skills/bootstrap-github-skills-exercise/references/exercise-template-contract.md` captures the concrete
+conventions implemented by [`skills/exercise-template`](https://github.com/skills/exercise-template) and
+[`skills/exercise-toolkit`](https://github.com/skills/exercise-toolkit): canonical file names, workflow
+skeletons, reusable workflow inputs and outputs, action pins, workflow enable/disable chaining, permission
+matrix, grading job shape, and the README, step, and review Markdown skeletons. The bootstrap skill and the
+Exercise Builder agent read it before writing files.
 
 ## Quick Start
 
-### 1. Create the exercise outline
+### Orchestrated (recommended)
+
+```
+@github-skills-orchestrator I want to build a GitHub Skills exercise that teaches [topic].
+Use /orchestrate-github-skills-exercise and check in with me after every build and review round.
+```
+
+The orchestrator runs the four phases and stops at each gate:
+
+```mermaid
+flowchart LR
+    A[Outline] --> G1{Approve?}
+    G1 -- revise --> A
+    G1 -- yes --> B[Build round]
+    B --> G2{Satisfied?}
+    G2 -- changes --> B
+    G2 -- yes --> C[Review round]
+    C --> G3{Blockers?}
+    G3 -- fix --> B
+    G3 -- none --> D[Publish prep]
+    D --> G4{Authorize?}
+    G4 -- yes --> E[Publish or transfer]
+```
+
+### Phase by phase
+
+#### 1. Create the exercise outline
 
 ```
 @github-skills-outline-architect I want to teach [topic] as a 30-minute GitHub Skills exercise.
 Use /create-github-skills-outline to define objectives, learner steps, and validation ideas.
 ```
 
-### 2. Bootstrap the repository
+#### 2. Bootstrap the repository
 
 ```
 @github-skills-exercise-builder Use the approved outline to scaffold the exercise.
 Use /bootstrap-github-skills-exercise to create README content, steps, workflows, and validation guidance.
 ```
 
-### 3. Review before launch
+#### 3. Review before launch
 
 ```
 @github-skills-quality-reviewer Review this exercise for learner clarity, validation reliability, workflow safety, and accessibility.
 Use /review-github-skills-exercise and prioritize release blockers.
 ```
 
-### 4. Prepare for publication
+#### 4. Prepare for publication
 
 ```
 @github-skills-publisher Prepare this exercise for release.
 Use /publish-github-skills-exercise to produce validation evidence, PR description, release notes, and remaining risks.
 ```
 
+To publish into an organization or move an existing exercise between organizations:
+
+```
+@github-skills-publisher Transfer this exercise from source-org to dest-org and fix the Copy Exercise badge afterward.
+```
+
 ## How It Works
 
 The plugin splits exercise creation into four focused phases so the human can approve the learning design before repository automation is generated:
 
-- **Outline first** — define the learner outcome, scenario, steps, and validation signals.
+- **Outline first** — define the learner outcome, scenario, steps, and validation signals. Every step needs a Theory block and at least one Activity block.
 - **Bootstrap second** — create or update repository assets only after the outline is approved.
-- **Review third** — catch weak validation, unsafe workflow behavior, unclear learner instructions, and accessibility issues.
-- **Publish last** — assemble release evidence and handoff notes for contribution or rollout.
+- **Review third** — catch weak validation, unsafe workflow behavior, unclear learner instructions, missing Theory or Activity blocks, and accessibility issues.
+- **Publish last** — assemble release evidence and handoff notes for contribution, rollout, or org transfer.
+
+The Orchestrator agent runs these phases as a loop with four gates and **stops for a user check-in after every
+build round and every review round**, so work is never chained build → review → build without review.
+
+## Exercise conventions
+
+Exercises generated by this plugin follow the `skills/exercise-template` contract:
+
+- `.github/steps/N-step.md` ↔ `.github/workflows/N-step.yml` ↔ workflow `name: Step N`, with the final
+  workflow as `N-last-step.yml` and review content in `.github/steps/x-review.md`.
+- Only `Step 0` is enabled on a fresh copy; each step enables the next as the learner progresses.
+- Every step has one `📖 Theory` block with real content and at least one `⌨️ Activity` block.
+- Copilot prompts and terminal commands inside an activity use badge-led blockquotes:
+
+  > ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)
+
+  > ![Static Badge](https://img.shields.io/badge/CLI-Prompt-text?style=flat-square&logo=github-copilot&labelColor=8250df&color=fbefff)
+
+  > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
 
 ## Companion Instructions
 
@@ -112,7 +174,7 @@ The Awesome Copilot plugin spec declares plugin content with `agents`, `commands
 
 ## Evaluation
 
-Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review, and publish readiness.
+Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review, publish readiness, orchestrated loop handling, and org-to-org transfer.
 
 ## Release process (SemVer)
 

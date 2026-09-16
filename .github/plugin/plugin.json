@@ -1,7 +1,7 @@
 {
   "name": "gh-skills-builder",
   "description": "Design, build, review, and publish GitHub Skills-style exercises with custom agents and Agent Skills for learner journeys, workflow-backed validation, and release readiness.",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "keywords": [
     "github-skills",
     "education",
@@ -19,6 +19,7 @@
     "./agents"
   ],
   "skills": [
+    "./skills/orchestrate-github-skills-exercise",
     "./skills/create-github-skills-outline",
     "./skills/bootstrap-github-skills-exercise",
     "./skills/review-github-skills-exercise",
