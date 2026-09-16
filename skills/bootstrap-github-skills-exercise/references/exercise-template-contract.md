@@ -649,9 +649,16 @@ Run these before reporting the bootstrap complete:
 > # The pinned tag actually exists (drafts have no tag)
 > gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref  # replace TAG with the selected repo-wide tag
 >
-> # Every step file has a Theory block and an Activity block
-> grep -c "### 📖 Theory:" .github/steps/*-step.md
-> grep -c "### ⌨️ Activity:" .github/steps/*-step.md
+> # Every step file has exactly one Theory block and at least one Activity block
+> python3 - <<'PY'
+> from pathlib import Path
+> for path in sorted(Path(".github/steps").glob("*-step.md")):
+>     text = path.read_text(encoding="utf-8")
+>     theory = text.count("### 📖 Theory:")
+>     activity = text.count("### ⌨️ Activity:")
+>     if theory != 1 or activity < 1:
+>         raise SystemExit(f"{path}: Theory={theory}, Activity={activity}")
+> PY
 >
 > # Workflows parse
 > if command -v actionlint >/dev/null 2>&1; then
