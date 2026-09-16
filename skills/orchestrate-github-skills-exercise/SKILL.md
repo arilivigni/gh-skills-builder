@@ -67,6 +67,10 @@ Gate 1 passes when the user explicitly approves the outline. Before moving on, c
 
 Run `bootstrap-github-skills-exercise` against the approved outline.
 
+Before the first build round, confirm the `skills/exercise-toolkit` version. The default is `v0.9.3`. If
+`gh api repos/skills/exercise-toolkit/releases/latest` reports a newer published release, ask the user
+whether to adopt it before generating workflows. Never pin a draft release; its git tag does not exist.
+
 At the end of **every** build round, stop and report:
 
 - files created or changed in this round,

@@ -32,7 +32,8 @@ You are a high-signal reviewer for GitHub Skills exercise repositories. Surface 
   is `N-last-step.yml`, and review content is `x-review.md`.
 - Every `gh workflow enable "Step N"` names a workflow that exists.
 - Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists.
-- All `skills/exercise-toolkit` references use the same pinned release tag; none use `@main`.
+- All `skills/exercise-toolkit` references use the same pinned release tag; none use `@main`; and the tag
+  resolves (draft releases have no git tag and break every workflow).
 - `post_next_step_content.needs` matches whether `check_step_work` exists.
 - The start workflow is guarded with `if: !github.event.repository.is_template`.
 - No `replace-me` or other placeholder text remains in `README.md` or `.github/`.

@@ -71,11 +71,31 @@ workspace:
   with:
     repository: skills/exercise-toolkit
     path: exercise-toolkit
-    ref: v0.9.1
+    ref: v0.9.3
 ```
 
 Do not copy toolkit templates into the exercise repository. Create a local `.github/markdown-templates/`
 directory only for exercise-specific copy that has no toolkit equivalent.
+
+## Toolkit version check
+
+The default toolkit ref is `v0.9.3`. When creating a new exercise, check whether a newer release exists and
+ask the user whether to adopt it:
+
+> ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
+>
+> ```bash
+> gh api repos/skills/exercise-toolkit/releases/latest --jq .tag_name
+> ```
+
+If the latest published release is newer than `v0.9.3`, ask the user before changing anything, then apply
+their answer to every toolkit reference in the repository.
+
+> [!WARNING]
+> Never pin a draft or prerelease. A draft release appears in the releases API but **its git tag does not
+> exist**, so `uses: ...@<tag>` fails to resolve and every workflow breaks. Use `releases/latest`, which
+> excludes drafts, and confirm the tag resolves with
+> `gh api repos/skills/exercise-toolkit/git/ref/tags/TAG` before pinning it.
 
 ## Workflow structure expectations
 
@@ -91,7 +111,8 @@ If `check_step_work` is present, include it in `post_next_step_content.needs`. I
 ## Workflow design guidance
 
 - Use least-privilege `permissions` per the contract reference matrix.
-- Pin every action and reusable workflow. Use one `skills/exercise-toolkit` ref across the whole repository.
+- Pin every action and reusable workflow. Use one `skills/exercise-toolkit` ref across the whole repository;
+  the default is `v0.9.3`. Never pin a draft release, whose tag does not exist.
 - Only `Step 0` is enabled on a fresh copy. Every other step workflow ships disabled and is enabled by the
   previous step.
 - Guard the start workflow with `if: !github.event.repository.is_template`.

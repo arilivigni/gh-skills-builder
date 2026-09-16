@@ -27,7 +27,8 @@ Use these instructions when working in a repository that implements a self-paced
   workspace. Do not copy them into the exercise repository. Create local `.github/markdown-templates/` files
   only for exercise-specific copy with no toolkit equivalent.
 - Pin every action and reusable workflow. Use one `skills/exercise-toolkit` release tag across the whole
-  repository, never `@main`.
+  repository; the current default is `v0.9.3`. Never use `@main`, and never pin a draft or prerelease, whose
+  git tag does not exist.
 
 ## Step and workflow patterns
 

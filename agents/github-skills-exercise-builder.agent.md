@@ -71,8 +71,10 @@ badge URLs verbatim and keep the alt text `Static Badge`.
   - `post_next_step_content`
 - If `check_step_work` exists, include it in `post_next_step_content.needs`. If you remove it, reduce `needs`
   back to `[find_exercise]`.
-- Resolve the latest `skills/exercise-toolkit` release tag at bootstrap time and use that same ref in every
-  `uses:` and every toolkit `actions/checkout`. `v0.9.x` is the known-good floor. Never use `@main`.
+- Default the `skills/exercise-toolkit` ref to `v0.9.3` and use that same ref in every `uses:` and every
+  toolkit `actions/checkout`. When creating a new exercise, check `releases/latest` for a newer published
+  release and ask the user whether to adopt it before changing anything. Never pin a draft or prerelease:
+  its git tag does not exist and every workflow will fail to resolve. Never use `@main`.
 - Only `Step 0` is enabled on a fresh copy. Each intermediate step disables itself and enables the next.
 - Guard the start workflow with `if: !github.event.repository.is_template`.
 - Every grading check uses `continue-on-error: true`, a stable `id`, a row in the `step-results-table.md`

@@ -42,21 +42,40 @@ Additional invariants:
 
 ## exercise-toolkit version
 
-Resolve the latest `skills/exercise-toolkit` release tag at bootstrap time and use that single ref
-everywhere in the repository:
+**Default: `v0.9.3`.** This is the latest published release and the version used in every skeleton below.
+
+At exercise creation time, check whether a newer release exists and ask the user whether to adopt it. Do not
+silently upgrade, and do not silently stay behind.
 
 > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
 >
 > ```bash
+> # Latest PUBLISHED release (excludes drafts and prereleases)
 > gh api repos/skills/exercise-toolkit/releases/latest --jq .tag_name
+>
+> # Confirm the tag actually exists before pinning it
+> gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref
 > ```
+
+If the latest published release is newer than the default, ask the user:
+
+> The exercise-toolkit default is `v0.9.3`, but `<newer tag>` is now available.
+> Do you want to build this exercise against `<newer tag>` instead?
+
+Apply the user's answer to every toolkit reference in the repository.
+
+> [!WARNING]
+> Never pin a draft or prerelease. A draft release is visible through the releases API to users with
+> repository access, but **its git tag does not exist**, so `uses: ...@<tag>` fails to resolve and every
+> workflow in the exercise breaks. `v0.9.4` is currently a draft with no tag, which is why the default is
+> `v0.9.3`. Always confirm a tag resolves before pinning it.
 
 Rules:
 
-- `v0.9.x` is the known-good floor. `skills/exercise-template` currently pins `v0.9.1`.
+- `v0.9.x` is the known-good line. `skills/exercise-template` itself still pins `v0.9.1`.
 - Never mix refs. The same tag must appear in every `uses: skills/exercise-toolkit/...@<ref>` and in every
   `actions/checkout` of `skills/exercise-toolkit`.
-- Always pin a release tag. Never use `@main`.
+- Always pin a tag that exists. Never use `@main`.
 
 ## Reusable workflows
 
@@ -170,7 +189,7 @@ jobs:
     if: |
       !github.event.repository.is_template
     name: Start Exercise
-    uses: skills/exercise-toolkit/.github/workflows/start-exercise.yml@v0.9.1
+    uses: skills/exercise-toolkit/.github/workflows/start-exercise.yml@v0.9.3
     with:
       exercise-title: "Exercise title"
       intro-message: "One line introduction message for the exercise"
@@ -193,7 +212,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.9.1
+          ref: v0.9.3
 
       - name: Create comment - add step content
         uses: GrantBirki/comment@v2.1.1
@@ -243,7 +262,7 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
-    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.1
+    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
 
   # Optional "grading job". Remove it if this step is not graded.
   check_step_work:
@@ -262,7 +281,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.9.1
+          ref: v0.9.3
 
       - name: Find last comment
         id: find-last-comment
@@ -286,7 +305,7 @@ jobs:
       - name: Check if README file exists
         id: check-file-exists
         continue-on-error: true
-        uses: skills/exercise-toolkit/actions/file-exists@v0.9.1
+        uses: skills/exercise-toolkit/actions/file-exists@v0.9.3
         with:
           file: README.md
 
@@ -336,7 +355,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.9.1
+          ref: v0.9.3
 
       - name: Create comment - step finished
         uses: GrantBirki/comment@v2.1.1
@@ -396,7 +415,7 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
-    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.1
+    uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
 
   post_review_content:
     name: Post review content
@@ -414,7 +433,7 @@ jobs:
         with:
           repository: skills/exercise-toolkit
           path: exercise-toolkit
-          ref: v0.9.1
+          ref: v0.9.3
 
       - name: Create comment - step finished - final review next
         uses: GrantBirki/comment@v2.1.1
@@ -438,7 +457,7 @@ jobs:
   finish_exercise:
     name: Finish Exercise
     needs: [find_exercise, post_review_content]
-    uses: skills/exercise-toolkit/.github/workflows/finish-exercise.yml@v0.9.1
+    uses: skills/exercise-toolkit/.github/workflows/finish-exercise.yml@v0.9.3
     with:
       issue-url: ${{ needs.find_exercise.outputs.issue-url }}
       exercise-title: "Exercise title"
@@ -619,6 +638,9 @@ Run these before reporting the bootstrap complete:
 >
 > # Every toolkit reference uses the same pinned tag
 > grep -rhno "exercise-toolkit[^ ]*@v[0-9.]*" .github/workflows/ | sort -u
+>
+> # The pinned tag actually exists (drafts have no tag)
+> gh api repos/skills/exercise-toolkit/git/ref/tags/v0.9.3 --jq .ref
 >
 > # Every step file has a Theory block and an Activity block
 > grep -c "### 📖 Theory:" .github/steps/*-step.md

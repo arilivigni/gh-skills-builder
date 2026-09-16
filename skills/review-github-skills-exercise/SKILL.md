@@ -43,7 +43,8 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - The final workflow is `N-last-step.yml` and posts `.github/steps/x-review.md`.
 - Every `gh workflow enable "Step N"` names a workflow that exists.
 - Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists.
-- Every `skills/exercise-toolkit` reference uses the same pinned release tag, and none use `@main`.
+- Every `skills/exercise-toolkit` reference uses the same pinned release tag, none use `@main`, and the
+  pinned tag actually resolves (a draft release has no git tag and will break every workflow).
 - If `check_step_work` exists, `post_next_step_content.needs` includes it; if it was removed, `needs` is back
   to `[find_exercise]`.
 - The start workflow is guarded with `if: !github.event.repository.is_template`.
