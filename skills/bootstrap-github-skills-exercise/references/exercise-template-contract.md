@@ -647,5 +647,9 @@ Run these before reporting the bootstrap complete:
 > grep -c "### ⌨️ Activity:" .github/steps/*-step.md
 >
 > # Workflows parse
-> actionlint || python3 -c "import sys,yaml,glob; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')]"
+> if command -v actionlint >/dev/null 2>&1; then
+>   actionlint
+> else
+>   python3 -c "import sys,yaml,glob; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')]"
+> fi
 > ```
