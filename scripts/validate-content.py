@@ -260,6 +260,16 @@ def check_contract_self_consistency() -> None:
     if "Having trouble" not in skeleton:
         fail("contract", "step skeleton must contain a 'Having trouble' recovery block")
 
+    # The skeleton must satisfy the rule it teaches: a Theory heading with real
+    # content beneath it, and an Activity with numbered instructions.
+    theory = re.search(r"### 📖 Theory:[^\n]*\n(.*?)(?=^#{1,3} )", skeleton, flags=re.DOTALL | re.MULTILINE)
+    if theory is None or not [line for line in theory.group(1).splitlines() if line.strip()]:
+        fail("contract", "step skeleton's Theory block has no content")
+
+    activity = re.search(r"### ⌨️ Activity:[^\n]*\n(.*?)(?=^#{1,3} |\Z)", skeleton, flags=re.DOTALL | re.MULTILINE)
+    if activity is None or not re.search(r"^\s*\d+\.\s+\S", activity.group(1), flags=re.MULTILINE):
+        fail("contract", "step skeleton's Activity block has no numbered instructions")
+
     for section in ("## Activity block conventions", "## Workflow chaining rules", "## Permissions matrix"):
         if section not in text:
             fail("contract", f"contract reference is missing section '{section}'")

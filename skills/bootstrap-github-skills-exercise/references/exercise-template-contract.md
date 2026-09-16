@@ -128,14 +128,20 @@ equivalent.
 
 ## Permissions matrix
 
-| Workflow | `contents` | `actions` | `issues` |
-| --- | --- | --- | --- |
-| `0-start-exercise.yml` | `write` | `write` | `write` |
-| `N-step.yml` without grading | `read` | `write` | `write` |
-| `N-step.yml` with grading that needs repo state | `write` | `write` | `write` |
-| `N-last-step.yml` | `write` | `write` | `write` |
+| Workflow | `contents` | `actions` | `issues` | Why `contents` |
+| --- | --- | --- | --- | --- |
+| `0-start-exercise.yml` | `write` | `write` | `write` | `start-exercise.yml` overwrites and commits `README.md` |
+| `N-step.yml` without grading | `read` | `write` | `write` | checkout only |
+| `N-step.yml` with grading | `read` | `write` | `write` | grading reads files and posts comments; it does not commit |
+| `N-last-step.yml` | `write` | `write` | `write` | `finish-exercise.yml` commits the README congratulations update |
 
 `actions: write` is required because every step workflow enables and disables sibling workflows.
+
+> [!IMPORTANT]
+> Give a grading job `contents: write` only if that specific grader actually commits to the repository. The
+> standard grading job reads files and writes issue comments, so `contents: read` is sufficient. A step
+> workflow is learner-triggered, so a write-capable token there is a privilege escalation with no
+> corresponding need.
 
 ## Workflow chaining rules
 
@@ -266,9 +272,9 @@ on:
   #     - closed
 
 permissions:
-  contents: write
-  actions: write
-  issues: write
+  contents: read # grading reads files; raise to write only if your grader commits
+  actions: write # enable and disable sibling step workflows
+  issues: write # post and update learner feedback comments
 
 env:
   STEP_3_FILE: ".github/steps/3-step.md"
@@ -693,15 +699,52 @@ Run these before reporting the bootstrap complete:
 > # The pinned tag actually exists (drafts have no tag)
 > gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref  # replace TAG with the selected repo-wide tag
 >
-> # Every step file has exactly one Theory block and at least one Activity block
+> # Every step file has exactly one non-empty Theory block and at least one
+> # Activity block containing numbered instructions. Counting headings is not
+> # enough: an empty Theory section or an Activity with no steps must fail.
 > python3 - <<'PY'
+> import re, sys
 > from pathlib import Path
+>
+> THEORY = "### 📖 Theory:"
+> ACTIVITY = "### ⌨️ Activity:"
+> problems = []
+>
+> def sections(text, marker):
+>     """Body text following each occurrence of marker, up to the next heading."""
+>     bodies = []
+>     for match in re.finditer(re.escape(marker) + r"[^\n]*\n", text):
+>         rest = text[match.end():]
+>         end = re.search(r"^#{1,3} ", rest, re.MULTILINE)
+>         bodies.append(rest[: end.start()] if end else rest)
+>     return bodies
+>
+> def meaningful(body):
+>     """Strip HTML comments, standalone images and blank lines."""
+>     body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+>     body = re.sub(r"^\s*<img[^>]*>\s*$", "", body, flags=re.MULTILINE)
+>     return [line for line in (l.strip() for l in body.splitlines()) if line]
+>
 > for path in sorted(Path(".github/steps").glob("*-step.md")):
 >     text = path.read_text(encoding="utf-8")
->     theory = text.count("### 📖 Theory:")
->     activity = text.count("### ⌨️ Activity:")
->     if theory != 1 or activity < 1:
->         raise SystemExit(f"{path}: Theory={theory}, Activity={activity}")
+>
+>     theory_bodies = sections(text, THEORY)
+>     if len(theory_bodies) != 1:
+>         problems.append(f"{path}: expected exactly 1 Theory block, found {len(theory_bodies)}")
+>     elif not meaningful(theory_bodies[0]):
+>         problems.append(f"{path}: Theory block has no content")
+>
+>     activity_bodies = sections(text, ACTIVITY)
+>     if not activity_bodies:
+>         problems.append(f"{path}: no Activity block")
+>     else:
+>         for index, body in enumerate(activity_bodies, 1):
+>             if not re.search(r"^\s*\d+\.\s+\S", body, re.MULTILINE):
+>                 problems.append(f"{path}: Activity block {index} has no numbered instructions")
+>
+> if problems:
+>     sys.exit("\n".join(problems))
+> print("step content OK")
 > PY
 >
 > # Workflows parse
