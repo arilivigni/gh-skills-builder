@@ -31,13 +31,16 @@ Confirm which path applies before running anything:
 ### Path A: publish to a personal account or organization
 
 1. Confirm target owner/repository and whether a remote already exists.
-2. Confirm you have permission to create repositories in the target owner. For an organization, that is the
-   `Create repositories` permission, plus admin on the new repository to set the template flag.
-3. Create the repository with Actions disabled before any content exists, so nothing runs on first push:
+2. If the target repository does not exist, confirm you have permission to create repositories in the target owner. For
+   an organization, that is the `Create repositories` permission, plus admin on the new repository to set the
+   template flag. If it already exists, confirm admin access to change its Actions and template settings.
+3. If the target repository does not exist, create it with Actions disabled before any content exists, so nothing
+   runs on first push. If it already exists, do not run `gh repo create`; disable Actions before pushing:
 
    > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
    >
    > ```bash
+   > # Run the create command only for a new repository.
    > gh repo create ORG/REPO --public --description "Exercise: TITLE"
    > gh api -X PUT repos/ORG/REPO/actions/permissions -F enabled=false
    > ```
