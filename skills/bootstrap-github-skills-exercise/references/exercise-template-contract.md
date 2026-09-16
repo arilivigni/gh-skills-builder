@@ -640,7 +640,7 @@ Run these before reporting the bootstrap complete:
 > grep -rhno "exercise-toolkit[^ ]*@v[0-9.]*" .github/workflows/ | sort -u
 >
 > # The pinned tag actually exists (drafts have no tag)
-> gh api repos/skills/exercise-toolkit/git/ref/tags/v0.9.3 --jq .ref
+> gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref  # replace TAG with the selected repo-wide tag
 >
 > # Every step file has a Theory block and an Activity block
 > grep -c "### 📖 Theory:" .github/steps/*-step.md
