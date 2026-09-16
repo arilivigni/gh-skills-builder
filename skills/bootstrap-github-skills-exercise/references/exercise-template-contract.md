@@ -416,6 +416,14 @@ Grading job rules:
 - When `check_step_work` exists, `post_next_step_content.needs` must include it. When it is removed, the
   `needs` list must be reduced back to `[find_exercise]`.
 
+> [!WARNING]
+> Getting this wrong silently disables grading. If `check_step_work` runs but is not in
+> `post_next_step_content.needs`, the two jobs run in parallel and the learner is advanced to the next step
+> even when the grading job fails. The exercise looks like it validates work but does not. The upstream
+> `skills/exercise-template` ships `2-step.yml` in exactly this state, with the correct wiring left as a
+> comment for the author to apply, so it is easy to inherit by accident. The pre-handoff checks below
+> detect it.
+
 ### `N-last-step.yml`
 
 ```yaml
@@ -660,8 +668,69 @@ Run these before reporting the bootstrap complete:
 >   echo "no placeholders"
 > fi
 >
-> # Step content and step workflows line up
-> ls .github/steps/ .github/workflows/
+> # Step content and step workflows line up, STEP_N_FILE/REVIEW_FILE targets
+> # exist, and every `gh workflow enable "Step N"` names a workflow that exists.
+> python3 - <<'PY'
+> import re, sys
+> from pathlib import Path
+>
+> problems = []
+> steps = Path(".github/steps")
+> flows = Path(".github/workflows")
+>
+> step_numbers = {int(m.group(1)) for p in steps.glob("*-step.md") if (m := re.match(r"(\d+)-step\.md$", p.name))}
+> workflow_files = sorted(flows.glob("*.yml"))
+>
+> names, numbers = {}, set()
+> for path in workflow_files:
+>     text = path.read_text(encoding="utf-8")
+>
+>     name = re.search(r"^name:\s*(.+?)\s*(?:#.*)?$", text, re.MULTILINE)
+>     if name:
+>         names[name.group(1).strip().strip('"\'')] = path
+>
+>     number = re.match(r"(\d+)-", path.name)
+>     if number and int(number.group(1)) > 0:
+>         numbers.add(int(number.group(1)))
+>
+>     # Referenced content files must exist.
+>     for target in re.findall(r"^\s*(?:STEP_\d+_FILE|REVIEW_FILE):\s*[\"']?([^\"'\n]+)", text, re.MULTILINE):
+>         if not Path(target.strip()).exists():
+>             problems.append(f"{path}: references missing file {target.strip()}")
+>
+> # Every enabled workflow name must exist.
+> for path in workflow_files:
+>     for target in re.findall(r'gh workflow enable\s+"([^"]+)"', path.read_text(encoding="utf-8")):
+>         if target not in names:
+>             problems.append(f"{path}: enables '{target}', which no workflow declares")
+>
+> missing_workflow = step_numbers - numbers
+> missing_step = numbers - step_numbers
+> if missing_workflow:
+>     problems.append(f"step files with no matching workflow: {sorted(missing_workflow)}")
+> if missing_step:
+>     problems.append(f"step workflows with no matching step file: {sorted(missing_step)}")
+>
+> # A grading job that is not in `needs` lets the learner advance even when
+> # grading fails, which silently disables the check.
+> import yaml
+> for path in workflow_files:
+>     document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+>     jobs = document.get("jobs") or {}
+>     if "check_step_work" not in jobs:
+>         continue
+>     for job_name, job in jobs.items():
+>         if job_name in {"find_exercise", "check_step_work"}:
+>             continue
+>         needs = job.get("needs") or []
+>         needs = [needs] if isinstance(needs, str) else needs
+>         if "check_step_work" not in needs:
+>             problems.append(f"{path}: job '{job_name}' does not need check_step_work, so grading cannot gate it")
+>
+> if problems:
+>     sys.exit("\n".join(problems))
+> print(f"step/workflow parity OK: steps {sorted(step_numbers)}, workflows {sorted(numbers)}")
+> PY
 >
 > # Every toolkit reference is the same release tag.
 > # Covers both forms: `uses: skills/exercise-toolkit/...@<ref>` and the toolkit
@@ -685,8 +754,11 @@ Run these before reporting the bootstrap complete:
 >         uses = mapping.get("uses")
 >         if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
 >             refs.setdefault(uses.rsplit("@", 1)[1], set()).add(str(path))
->         if mapping.get("repository") == "skills/exercise-toolkit" and "ref" in mapping:
->             refs.setdefault(str(mapping["ref"]), set()).add(str(path))
+>         if mapping.get("repository") == "skills/exercise-toolkit":
+>             # A checkout with no ref follows the toolkit default branch.
+>             ref = mapping.get("ref")
+>             ref = str(ref).strip() if ref is not None and str(ref).strip() else "(unpinned)"
+>             refs.setdefault(ref, set()).add(str(path))
 >
 > bad = {r: f for r, f in refs.items() if not re.fullmatch(r"v\d+\.\d+\.\d+", r)}
 > if bad:

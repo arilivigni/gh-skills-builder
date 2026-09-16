@@ -122,10 +122,17 @@ If the user asks what is next on an existing exercise, determine the current pha
 | --- | --- |
 | No outline recorded | Phase 1 |
 | Outline approved, no `.github/steps/` content | Phase 2 |
-| Steps and workflows exist, no review performed | Phase 3 |
-| Review clean and signed off, not yet published | Phase 4 |
+| Steps and workflows exist | Phase 3 |
+| Steps and workflows exist **and** a recorded review sign-off exists | Phase 4 |
 
-Report the detected phase and ask the user to confirm before continuing.
+> [!IMPORTANT]
+> Repository state alone cannot tell you that a review happened. A reviewed exercise and an unreviewed one
+> look identical on disk. Default to Phase 3 and re-run the review unless there is explicit recorded
+> evidence of sign-off, such as a review summary committed with the exercise, a linked approving pull request
+> review, or the user confirming it in this conversation. Never infer Gate 3 from the presence of files, or
+> the loop can skip review entirely.
+
+Report the detected phase and the evidence you used, then ask the user to confirm before continuing.
 
 ## Status report format
 

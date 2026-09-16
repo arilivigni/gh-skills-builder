@@ -44,14 +44,19 @@ Use `/orchestrate-github-skills-exercise` for the full loop definition.
 
 ## Resuming mid-flight
 
-Detect the current phase from repository state, report it, and ask the user to confirm before continuing:
+Detect the current phase from repository state, report it with the evidence you used, and ask the user to
+confirm before continuing:
 
 | Observation | Phase |
 | --- | --- |
 | No outline recorded | Phase 1 |
 | Outline approved, no `.github/steps/` content | Phase 2 |
-| Steps and workflows exist, no review performed | Phase 3 |
-| Review clean and signed off, not yet published | Phase 4 |
+| Steps and workflows exist | Phase 3 |
+| Steps and workflows exist **and** a recorded review sign-off exists | Phase 4 |
+
+Repository state cannot prove a review happened: a reviewed and an unreviewed exercise look identical on
+disk. Default to Phase 3 and re-run the review unless there is explicit recorded evidence of sign-off.
+Never infer Gate 3 from the presence of files.
 
 ## Report format
 

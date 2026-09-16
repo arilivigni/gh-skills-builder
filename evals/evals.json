@@ -4,12 +4,13 @@
     {
       "id": 1,
       "prompt": "Create an outline for a GitHub Skills exercise that teaches developers how to use Copilot custom instructions, reusable prompts, and custom agents in a small Node.js repository. The exercise should take about 30 minutes and include validation ideas.",
-      "expected_output": "A learner-centered outline with objectives, scenario, step table, validation plan, repository plan, success criteria, and open questions.",
+      "expected_output": "A learner-centered outline with a Welcome block, observable objectives, scenario, per-step sections each containing a Theory block and an Activity block, validation plan, review recap, file map, success criteria, and open questions.",
       "files": [],
       "expectations": [
-        "The output includes observable learning objectives.",
-        "The output breaks the exercise into learner actions with validation signals.",
-        "The output identifies repository files or workflow components needed for implementation."
+        "The output includes observable learning objectives and a Welcome block covering audience, what the learner builds, prerequisites, and duration.",
+        "The output breaks the exercise into per-step sections, each with a Theory block containing real content and an Activity block with numbered learner actions.",
+        "Each step defines an Actions Trigger and a Grading-Check validation signal.",
+        "The output includes a review recap for x-review.md and a file map naming the exact files bootstrap will create."
       ]
     },
     {

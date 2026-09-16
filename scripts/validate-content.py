@@ -199,8 +199,11 @@ def collect_toolkit_refs() -> dict[str, set[str]]:
                 if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
                     record(uses.rsplit("@", 1)[1], rel)
 
-                if mapping.get("repository") == "skills/exercise-toolkit" and "ref" in mapping:
-                    record(str(mapping["ref"]), rel)
+                if mapping.get("repository") == "skills/exercise-toolkit":
+                    # A checkout with no `ref` follows the toolkit's default
+                    # branch, which is the `@main` problem by another name.
+                    ref = mapping.get("ref")
+                    record(str(ref).strip() if ref is not None and str(ref).strip() else "(unpinned)", rel)
 
         # Refs mentioned in prose, outside any YAML block. Placeholders such as
         # `@<ref>` are documentation, not real pins.

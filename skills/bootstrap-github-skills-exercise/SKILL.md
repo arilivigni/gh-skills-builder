@@ -210,7 +210,10 @@ Do not report the bootstrap as done until all of these hold:
     explicitly tells the learner to start the exercise by running the workflow manually. The advertised
     "copy and wait" start path must have an event behind it.
 
-The contract reference includes a copy-ready command block for checks 1 through 8.
+The contract reference includes a copy-ready command block that mechanically verifies gates 1 through 8:
+placeholders, Theory and Activity content, step/workflow parity, `gh workflow enable` targets, `STEP_N_FILE`
+and `REVIEW_FILE` paths, toolkit ref consistency and pinning, `needs` wiring, and YAML parsing. Gates 9 and
+10 are judgement calls and need a human read.
 
 ## Report back
 
