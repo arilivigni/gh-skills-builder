@@ -47,8 +47,10 @@ organizations.
 - Record the current workflow enablement state before transferring.
 - Transfer with `gh api -X POST repos/SOURCE_ORG/REPO/transfer -f new_owner=DEST_ORG`.
 - After transfer, always re-check: the README Copy Exercise badge `template_owner`/`template_name` (the most
-  common breakage), the template flag, Actions enablement and per-workflow state, absolute links naming the
-  old owner, secrets and variables, branch protection, and the destination org's allowed-actions policy.
+  common breakage), the template flag, Actions enablement and per-workflow state, absolute links naming the old
+  owner, secrets and variables, branch protection, and the destination org's allowed-actions policy, including
+  `actions/checkout`, `skills/exercise-toolkit`, `skills/action-keyphrase-checker` when used, `GrantBirki/comment`,
+  and `peter-evans/find-comment`.
 - Warn the user that the old URL redirects but existing forks and copies keep pointing at the redirect.
 
 ### Failure handling
