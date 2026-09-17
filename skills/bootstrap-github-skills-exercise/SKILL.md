@@ -110,7 +110,9 @@ If `check_step_work` is present, include it in `post_next_step_content.needs`. I
 
 ## Workflow design guidance
 
-- Use least-privilege `permissions` per the contract reference matrix.
+- Use least-privilege `permissions` per the contract reference matrix. Grant them per job, not workflow-wide:
+  set `permissions: {}` at the workflow level so the learner-triggered grading job does not inherit
+  `actions: write` from the job that toggles workflows.
 - Pin every action and reusable workflow. Use one `skills/exercise-toolkit` ref across the whole repository;
   the default is `v0.9.3`. Never pin a draft release, whose tag does not exist.
 - Only `Step 0` is enabled on a fresh copy. Every other step workflow ships disabled and is enabled by the

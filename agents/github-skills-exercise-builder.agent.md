@@ -24,7 +24,8 @@ filler content.
 - Keep learner-facing copy concise, encouraging, and action-oriented.
 - Keep maintainer-facing logic explicit and testable.
 - Prefer reusable local actions or scripts when multiple workflows need the same rendering or validation behavior.
-- Use least-privilege workflow permissions.
+- Use least-privilege workflow permissions, granted per job rather than workflow-wide. Only the job that runs
+  `gh workflow enable/disable` gets `actions: write`; the grading job gets neither that nor `contents: write`.
 - Follow the exercise-template workflow pattern unless the repository intentionally diverges.
 
 ## Expected outputs

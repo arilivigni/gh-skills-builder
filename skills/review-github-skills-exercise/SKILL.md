@@ -74,7 +74,9 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 
 ### Workflow safety
 
-- Workflow permissions are least-privilege.
+- Workflow permissions are least-privilege and granted per job, not workflow-wide. A workflow-level grant
+  applies to every job, so check that the learner-triggered grading job does not inherit `actions: write`
+  from the job that toggles workflows, and does not hold `contents: write` unless it actually commits.
 - Automation does not overwrite learner or maintainer work unexpectedly.
 - Issue comments use stable markers if they are updated.
 - Repository-specific links are rendered safely.

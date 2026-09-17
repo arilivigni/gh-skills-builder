@@ -128,20 +128,26 @@ equivalent.
 
 ## Permissions matrix
 
-| Workflow | `contents` | `actions` | `issues` | Why `contents` |
-| --- | --- | --- | --- | --- |
-| `0-start-exercise.yml` | `write` | `write` | `write` | `start-exercise.yml` overwrites and commits `README.md` |
-| `N-step.yml` without grading | `read` | `write` | `write` | checkout only |
-| `N-step.yml` with grading | `read` | `write` | `write` | grading reads files and posts comments; it does not commit |
-| `N-last-step.yml` | `write` | `write` | `write` | `finish-exercise.yml` commits the README congratulations update |
+Grant permissions **per job**, not workflow-wide. A workflow-level `permissions:` block applies to every job
+in the file, so a single `actions: write` there hands workflow-mutation authority to the learner-triggered
+grading job as well. Set `permissions: {}` at the workflow level and grant each job only what it uses.
 
-`actions: write` is required because every step workflow enables and disables sibling workflows.
+| Workflow | Job | `contents` | `actions` | `issues` | Why |
+| --- | --- | --- | --- | --- | --- |
+| `0-start-exercise.yml` | `start_exercise` | `write` | `write` | `write` | `start-exercise.yml` commits the README and disables workflows |
+| | `post_next_step_content` | `read` | `write` | `write` | checkout, comment, enable `Step 1` |
+| `N-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
+| | `check_step_work` | `read` | **none** | `write` | reads files and posts comments; never toggles workflows |
+| | `post_next_step_content` | `read` | `write` | `write` | checkout, comment, disable self and enable next |
+| `N-last-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
+| | `post_review_content` | `read` | `write` | `write` | checkout, comment, disable self |
+| | `finish_exercise` | `write` | — | `write` | `finish-exercise.yml` commits the congratulations update |
 
 > [!IMPORTANT]
-> Give a grading job `contents: write` only if that specific grader actually commits to the repository. The
-> standard grading job reads files and writes issue comments, so `contents: read` is sufficient. A step
-> workflow is learner-triggered, so a write-capable token there is a privilege escalation with no
-> corresponding need.
+> The grading job is the one to watch. It runs on learner-controlled triggers, so it must not hold
+> `actions: write` (it would be able to enable or disable any workflow, including skipping ahead) and it must
+> not hold `contents: write` unless that specific grader actually commits. Reading files and posting issue
+> comments needs neither.
 
 ## Workflow chaining rules
 
@@ -196,10 +202,9 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  actions: write
-  issues: write
+# Least privilege: grant permissions per job, not workflow-wide, so a job only
+# holds the scopes it uses. `permissions: {}` here means "no default".
+permissions: {}
 
 env:
   STEP_1_FILE: ".github/steps/1-step.md"
@@ -209,6 +214,10 @@ jobs:
     if: |
       !github.event.repository.is_template
     name: Start Exercise
+    permissions:
+      contents: write # start-exercise.yml commits the README update
+      actions: write # start-exercise.yml disables workflows
+      issues: write # create the exercise issue
     uses: skills/exercise-toolkit/.github/workflows/start-exercise.yml@v0.9.3
     with:
       exercise-title: "Exercise title"
@@ -218,6 +227,10 @@ jobs:
     name: Post next step content
     runs-on: ubuntu-latest
     needs: [start_exercise]
+    permissions:
+      contents: read # checkout step content
+      actions: write # enable the next step workflow
+      issues: write # post step content and progress comments
     env:
       ISSUE_NUMBER: ${{ needs.start_exercise.outputs.issue-number }}
       ISSUE_REPOSITORY: ${{ github.repository }}
@@ -271,10 +284,10 @@ on:
   #   types:
   #     - closed
 
-permissions:
-  contents: read # grading reads files; raise to write only if your grader commits
-  actions: write # enable and disable sibling step workflows
-  issues: write # post and update learner feedback comments
+# Least privilege: grant permissions per job, not workflow-wide. Only the job
+# that toggles workflows gets `actions: write`; the learner-triggered grading
+# job must not be able to mutate workflow state.
+permissions: {}
 
 env:
   STEP_3_FILE: ".github/steps/3-step.md"
@@ -282,6 +295,8 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
+    permissions:
+      issues: read # locate the exercise issue
     uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
 
   # Optional "grading job". Remove it if this step is not graded.
@@ -289,6 +304,10 @@ jobs:
     name: Check step work
     runs-on: ubuntu-latest
     needs: [find_exercise]
+    permissions:
+      contents: read # read the learner's files; raise to write only if your grader commits
+      issues: write # post and update the feedback comment
+      # No actions: write. Grading must not be able to enable or disable workflows.
     env:
       ISSUE_REPOSITORY: ${{ github.repository }}
       ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
@@ -363,6 +382,10 @@ jobs:
     name: Post next step content
     needs: [find_exercise, check_step_work]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout step content
+      actions: write # disable this step and enable the next one
+      issues: write # post step content and progress comments
     env:
       ISSUE_REPOSITORY: ${{ github.repository }}
       ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
@@ -432,10 +455,8 @@ name: Step 3 # Last step of the exercise
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  actions: write
-  issues: write
+# Least privilege: grant permissions per job, not workflow-wide.
+permissions: {}
 
 env:
   REVIEW_FILE: ".github/steps/x-review.md"
@@ -443,12 +464,18 @@ env:
 jobs:
   find_exercise:
     name: Find Exercise Issue
+    permissions:
+      issues: read # locate the exercise issue
     uses: skills/exercise-toolkit/.github/workflows/find-exercise-issue.yml@v0.9.3
 
   post_review_content:
     name: Post review content
     needs: [find_exercise]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout review content
+      actions: write # disable this final workflow
+      issues: write # post the review comments
     env:
       ISSUE_REPOSITORY: ${{ github.repository }}
       ISSUE_NUMBER: ${{ needs.find_exercise.outputs.issue-number }}
@@ -485,6 +512,9 @@ jobs:
   finish_exercise:
     name: Finish Exercise
     needs: [find_exercise, post_review_content]
+    permissions:
+      contents: write # finish-exercise.yml commits the README congratulations update
+      issues: write # close out the exercise issue
     uses: skills/exercise-toolkit/.github/workflows/finish-exercise.yml@v0.9.3
     with:
       issue-url: ${{ needs.find_exercise.outputs.issue-url }}
@@ -728,6 +758,18 @@ Run these before reporting the bootstrap complete:
 >             problems.append(f"{path}: job '{job_name}' does not need check_step_work, so grading cannot gate it")
 >         if not has_grading and "check_step_work" in needs:
 >             problems.append(f"{path}: job '{job_name}' needs check_step_work, but no such job exists")
+>
+>     # Least privilege: a workflow-level grant reaches every job, and the
+>     # learner-triggered grading job must not be able to toggle workflows.
+>     if (document.get("permissions") or {}) not in ({}, None):
+>         problems.append(f"{path}: grants workflow-level permissions; grant them per job instead")
+>     grading = jobs.get("check_step_work") or {}
+>     if grading:
+>         granted = grading.get("permissions") or {}
+>         if granted.get("actions") in {"write"}:
+>             problems.append(f"{path}: check_step_work has actions: write; grading must not toggle workflows")
+>         if granted.get("contents") == "write":
+>             problems.append(f"{path}: check_step_work has contents: write; only grant it if the grader commits")
 >
 > for path, target in enables:
 >     if target not in names:
