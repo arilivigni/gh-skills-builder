@@ -4,22 +4,24 @@
     {
       "id": 1,
       "prompt": "Create an outline for a GitHub Skills exercise that teaches developers how to use Copilot custom instructions, reusable prompts, and custom agents in a small Node.js repository. The exercise should take about 30 minutes and include validation ideas.",
-      "expected_output": "A learner-centered outline with objectives, scenario, step table, validation plan, repository plan, success criteria, and open questions.",
+      "expected_output": "A learner-centered outline with a Welcome block, observable objectives, scenario, per-step sections each containing a Theory block and an Activity block, validation plan, review recap, file map, success criteria, and open questions.",
       "files": [],
       "expectations": [
-        "The output includes observable learning objectives.",
-        "The output breaks the exercise into learner actions with validation signals.",
-        "The output identifies repository files or workflow components needed for implementation."
+        "The output includes observable learning objectives and a Welcome block covering audience, what the learner builds, prerequisites, and duration.",
+        "The output breaks the exercise into per-step sections, each with a Theory block containing real content and an Activity block with numbered learner actions.",
+        "Each step defines an Actions Trigger and a Grading-Check validation signal.",
+        "The output includes a review recap for x-review.md and a file map naming the exact files bootstrap will create."
       ]
     },
     {
       "id": 2,
       "prompt": "I have an approved outline for a GitHub Skills exercise about resolving merge conflicts. Bootstrap the repository structure and describe the files, workflows, and validation scripts you would create. Include safe workflow permission guidance.",
-      "expected_output": "A bootstrap plan or file scaffold covering README, step Markdown, templates, workflows, validation, safety guidance, and completion behavior.",
+      "expected_output": "A bootstrap plan or file scaffold using the skills/exercise-template contract: README, numbered step Markdown, x-review, start and step workflows, grading job, safety guidance, and completion behavior.",
       "files": [],
       "expectations": [
-        "The output includes README, steps, templates, workflows, and validation assets.",
+        "The output names template-accurate files such as .github/steps/N-step.md, .github/steps/x-review.md, .github/workflows/0-start-exercise.yml, and a final N-last-step.yml.",
         "The output mentions least-privilege workflow permissions.",
+        "The output describes workflow chaining where only Step 0 is enabled initially and each step enables the next.",
         "The output describes how learner feedback and completion are handled."
       ]
     },
@@ -43,6 +45,41 @@
         "The output includes validation evidence based on the described dry run and workflow checks.",
         "The output includes a final checklist for README, workflows, links, reset behavior, and permissions.",
         "The output includes suggested PR description and release notes."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I want to build a GitHub Skills exercise that teaches secret scanning from scratch. Coordinate the whole process for me and tell me exactly where I need to make decisions.",
+      "expected_output": "An orchestrated lifecycle plan across outline, bootstrap, review and fix, and publish, with explicit approval gates and a user check-in after every build round and every review round.",
+      "files": [],
+      "expectations": [
+        "The output describes the four phases and the approval gate at the end of each.",
+        "The output states that it will stop and check in with the user after every build round and every review round rather than chaining build and review automatically.",
+        "The output states that publishing requires explicit authorization naming the target owner and repository."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write step 2 of a GitHub Skills exercise where the learner asks Copilot Chat to explain a workflow file, then runs a gh command to confirm the workflow is enabled. Include the theory.",
+      "expected_output": "A step Markdown file with one Theory block containing real content, one Activity block with numbered instructions, badge-led blockquotes for the Copilot prompt and the terminal command, and a troubleshooting details block.",
+      "files": [],
+      "expectations": [
+        "The step includes a '### \ud83d\udcd6 Theory:' heading followed by actual explanatory content, not a placeholder.",
+        "The step includes a '### \u2328\ufe0f Activity:' heading with numbered instructions.",
+        "The Copilot Chat prompt is wrapped in a blockquote led by the purple Prompt shields.io badge, and the gh command is wrapped in a blockquote led by the blue Terminal shields.io badge.",
+        "The step includes a 'Having trouble?' details block with recovery hints."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "We need to move our published GitHub Skills exercise from the old-org organization to the new-org organization. Walk me through it safely and tell me what usually breaks.",
+      "expected_output": "An org-to-org transfer plan with pre-checks, the transfer command, and the post-transfer fixes that are commonly missed.",
+      "files": [],
+      "expectations": [
+        "The output includes pre-checks for admin access, name collisions, and recording workflow enablement state.",
+        "The output identifies updating the README Copy Exercise badge template_owner and template_name as a required post-transfer fix.",
+        "The output includes re-verifying the template flag, Actions enablement, and that only Step 0 is enabled.",
+        "The output requires explicit authorization before performing the transfer."
       ]
     }
   ]
