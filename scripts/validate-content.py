@@ -196,8 +196,11 @@ def collect_toolkit_refs() -> dict[str, set[str]]:
 
             for mapping in _walk(document):
                 uses = mapping.get("uses")
-                if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
-                    record(uses.rsplit("@", 1)[1], rel)
+                if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit"):
+                    # A `uses:` with no `@ref` follows the toolkit default
+                    # branch, exactly like an unpinned checkout.
+                    ref = uses.rsplit("@", 1)[1].strip() if "@" in uses else ""
+                    record(ref or "(unpinned)", rel)
 
                 if mapping.get("repository") == "skills/exercise-toolkit":
                     # A checkout with no `ref` follows the toolkit's default

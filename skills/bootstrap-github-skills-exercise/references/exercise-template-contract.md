@@ -777,8 +777,10 @@ Run these before reporting the bootstrap complete:
 > for path in sorted(pathlib.Path(".github/workflows").glob("*.yml")):
 >     for mapping in walk(yaml.safe_load(path.read_text(encoding="utf-8"))):
 >         uses = mapping.get("uses")
->         if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit") and "@" in uses:
->             refs.setdefault(uses.rsplit("@", 1)[1], set()).add(str(path))
+>         if isinstance(uses, str) and uses.startswith("skills/exercise-toolkit"):
+>             # A `uses:` with no `@ref` follows the toolkit default branch.
+>             ref = uses.rsplit("@", 1)[1].strip() if "@" in uses else ""
+>             refs.setdefault(ref or "(unpinned)", set()).add(str(path))
 >         if mapping.get("repository") == "skills/exercise-toolkit":
 >             # A checkout with no ref follows the toolkit default branch.
 >             ref = mapping.get("ref")
