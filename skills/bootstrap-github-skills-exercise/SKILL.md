@@ -120,7 +120,9 @@ If `check_step_work` is present, include it in `post_next_step_content.needs`. I
 - Guard the start workflow with `if: !github.event.repository.is_template`.
 - Make check workflows fail helpfully before they pass. Every check uses `continue-on-error: true` and a row
   in the `step-results-table.md` `results_table`.
-- Update the existing feedback comment via `peter-evans/find-comment` rather than posting duplicates.
+- Update the existing feedback comment via `peter-evans/find-comment` rather than posting duplicates. Always
+  scope the lookup with `comment-author` and `body-includes`: a bare `direction: last` returns whatever was
+  posted most recently, so `edit-mode: replace` can overwrite a learner's own comment.
 - Avoid hardcoded repository-specific URLs in source Markdown; render them at runtime.
 - Prevent one-shot bootstrap workflows from overwriting legitimate later edits.
 - Use `paths` filters on push-based triggers where practical to avoid accidental transitions from unrelated

@@ -78,7 +78,8 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
   applies to every job, so check that the learner-triggered grading job does not inherit `actions: write`
   from the job that toggles workflows, and does not hold `contents: write` unless it actually commits.
 - Automation does not overwrite learner or maintainer work unexpectedly.
-- Issue comments use stable markers if they are updated.
+- Issue comments use stable markers if they are updated. Any `find-comment` feeding an `edit-mode: replace`
+  is scoped by `comment-author` and `body-includes`, so it cannot overwrite a learner's comment.
 - Repository-specific links are rendered safely.
 - Step 0/start behavior does not require manual workflow disabling and leaves expected step workflows off.
 - Exercise workflows are disabled by default before publication and only run as the learner progresses.

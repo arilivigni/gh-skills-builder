@@ -80,7 +80,9 @@ badge URLs verbatim and keep the alt text `Static Badge`.
 - Guard the start workflow with `if: !github.event.repository.is_template`.
 - Every grading check uses `continue-on-error: true`, a stable `id`, a row in the `step-results-table.md`
   `results_table`, and a closing `if: contains(steps.*.outcome, 'failure')` failure step.
-- Use stable comment update behavior via `peter-evans/find-comment` rather than posting duplicate comments.
+- Use stable comment update behavior via `peter-evans/find-comment` rather than posting duplicate comments,
+  and always scope the lookup with `comment-author` and `body-includes` so `edit-mode: replace` cannot
+  overwrite a learner's comment.
 - Use `paths` filters on push triggers where practical to avoid accidental transitions.
 - Ensure final step behavior differs from intermediate steps (finish/review flow instead of enabling another step).
 

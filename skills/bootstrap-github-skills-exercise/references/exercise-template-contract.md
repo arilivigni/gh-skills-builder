@@ -164,7 +164,7 @@ grading job as well. Set `permissions: {}` at the workflow level and grant each 
   ```
 
 - The final step workflow only disables itself.
-- `Step 0` does not disable itself; it is guarded instead:
+- `Step 0` is guarded so it does not run in the template itself:
 
   ```yaml
   jobs:
@@ -172,6 +172,15 @@ grading job as well. Set `permissions: {}` at the workflow level and grant each 
       if: |
         !github.event.repository.is_template
   ```
+
+  That guard is separate from how `Step 0` gets disabled. `Step 0` contains no `gh workflow disable` of its
+  own; the disabling happens inside the reusable workflow. `start-exercise.yml@v0.9.3` runs a
+  `disable_workflows` job that disables **every** workflow whose filename begins with a digit, including
+  `0-start-exercise.yml` itself, before `post_next_step_content` enables `Step 1`.
+
+  So the state after a learner copies the exercise is: all numbered workflows disabled by the reusable
+  workflow, then `Step 1` re-enabled by the start workflow's own final step. The exercise does not rely on
+  the copied repository shipping with a particular enabled/disabled state for steps 1 and later.
 
 - Step workflows default to `workflow_dispatch` with the real learner trigger left commented out for the
   author to choose. Uncomment and scope the trigger to the step's actual learner action. Prefer `paths`
@@ -328,6 +337,12 @@ jobs:
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
           issue-number: ${{ env.ISSUE_NUMBER }}
+          # Never replace a comment that is not our own feedback comment.
+          # Without these filters `direction: last` returns whatever was posted
+          # most recently, which may be the learner, and `edit-mode: replace`
+          # would then overwrite it.
+          comment-author: "github-actions[bot]"
+          body-includes: "watch your progress in the background"
           direction: last
 
       - name: Update comment - checking work
@@ -729,6 +744,10 @@ Run these before reporting the bootstrap complete:
 >
 >     declared = str(document.get("name", "")).strip()
 >     if declared:
+>         # Duplicate names make `gh workflow enable "Step N"` ambiguous, so the
+>         # chain can select the wrong file and skip the review.
+>         if declared in names:
+>             problems.append(f"{path}: declares name {declared!r}, already declared by {names[declared]}")
 >         names[declared] = path
 >
 >     number = re.match(r"(\d+)-", path.name)
@@ -737,13 +756,26 @@ Run these before reporting the bootstrap complete:
 >         if declared != f"Step {value}":
 >             problems.append(f"{path}: declares name {declared!r}, expected 'Step {value}'")
 >         if value > 0:
+>             if value in workflow_numbers:
+>                 problems.append(f"{path}: duplicates step number {value} with {workflow_numbers[value]}")
 >             workflow_numbers[value] = path
 >     if re.fullmatch(r"\d+-last-step\.yml", path.name):
 >         last_steps.append(path)
 >
->     for target in re.findall(r"^\s*(?:STEP_\d+_FILE|REVIEW_FILE):\s*[\"\']?([^\"\'\n]+)", text, re.MULTILINE):
->         if not Path(target.strip()).exists():
->             problems.append(f"{path}: references missing file {target.strip()}")
+>     # A referenced file that merely exists is not enough: STEP_N_FILE must be
+>     # step N's own content, and REVIEW_FILE must be the review page.
+>     for key, target in re.findall(r"^\s*(STEP_\d+_FILE|REVIEW_FILE):\s*[\"\']?([^\"\'\n]+)", text, re.MULTILINE):
+>         target = target.strip()
+>         if not Path(target).exists():
+>             problems.append(f"{path}: references missing file {target}")
+>             continue
+>         if key == "REVIEW_FILE":
+>             if target != ".github/steps/x-review.md":
+>                 problems.append(f"{path}: REVIEW_FILE is {target}, expected .github/steps/x-review.md")
+>         else:
+>             expected = ".github/steps/" + key.split("_")[1] + "-step.md"
+>             if target != expected:
+>                 problems.append(f"{path}: {key} is {target}, expected {expected}")
 >
 >     enables += [(path, name) for name in re.findall(r'gh workflow enable\s+"([^"]+)"', text)]
 >
@@ -761,8 +793,13 @@ Run these before reporting the bootstrap complete:
 >
 >     # Least privilege: a workflow-level grant reaches every job, and the
 >     # learner-triggered grading job must not be able to toggle workflows.
-if document.get("permissions") != {}:
-        problems.append(f"{path}: must set workflow-level permissions: {{}} and grant them per job")
+>     # Require the explicit empty mapping: an absent key inherits the
+>     # repository default token scopes rather than granting nothing.
+>     if document.get("permissions") != {}:
+>         problems.append(f"{path}: must set workflow-level 'permissions: {{}}' and grant per job")
+>     for job_name, job in jobs.items():
+>         if (job or {}).get("permissions") is None:
+>             problems.append(f"{path}: job '{job_name}' has no permissions block")
 >     grading = jobs.get("check_step_work") or {}
 >     if grading:
 >         granted = grading.get("permissions") or {}
