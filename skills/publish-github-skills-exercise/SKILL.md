@@ -122,7 +122,8 @@ manual recovery path. Do not retry destructive operations or work around a permi
 - Exercise steps match the stated objectives.
 - Every step has a Theory block with real content and at least one Activity block.
 - Copilot prompts and terminal commands in activities use the standard badge blocks.
-- No `replace-me` or placeholder text remains anywhere in `README.md` or `.github/`.
+- No placeholder text remains anywhere in `README.md` or `.github/`: not only `replace-me`, but bare
+  skeleton tokens (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`) and bracketed slots such as `[Step name]`.
 - Step content and step workflows align by number; the final workflow is `N-last-step.yml` and the review
   content is `.github/steps/x-review.md`.
 - Every `skills/exercise-toolkit` reference uses the same pinned release tag.

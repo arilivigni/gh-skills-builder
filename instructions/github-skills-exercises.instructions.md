@@ -103,6 +103,7 @@ Before considering an exercise ready, verify:
 - Each step tells the learner what to do, why it matters, and how to recover from common mistakes.
 - Validation fails helpfully before it passes.
 - Completion closes or marks the learning loop clearly.
-- No `replace-me` or placeholder text remains anywhere in `README.md` or `.github/`.
+- No placeholder text remains anywhere in `README.md` or `.github/`: not only `replace-me`, but bare
+  skeleton tokens (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`) and bracketed slots such as `[Step name]`.
 - Images, links, and code snippets render correctly in GitHub.
 - The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
