@@ -870,8 +870,9 @@ Run these before reporting the bootstrap complete:
 > # Every toolkit reference is the same release tag.
 > # Covers both forms: `uses: skills/exercise-toolkit/...@<ref>` and the toolkit
 > # `actions/checkout` `ref:` value. Any ref that is not vX.Y.Z (for example
-> # `main` or a SHA) is reported as a failure.
-> python3 - <<'PY'
+> # `main` or a SHA) is reported as a failure. The detected tag is captured so
+> # the next check does not need a hand-substituted value.
+> TOOLKIT_REF="$(python3 - <<'PY'
 > import pathlib, re, sys, yaml
 >
 > refs = {}
@@ -902,11 +903,17 @@ Run these before reporting the bootstrap complete:
 >     sys.exit(f"non-tag toolkit refs: { {r: sorted(f) for r, f in bad.items()} }")
 > if len(refs) > 1:
 >     sys.exit(f"mixed toolkit refs: { {r: sorted(f) for r, f in refs.items()} }")
-> print("toolkit ref:", next(iter(refs), "none found"))
+> if not refs:
+>     sys.exit("no exercise-toolkit references found")
+> # Print only the tag so the caller can reuse it.
+> print(next(iter(refs)))
 > PY
+> )"
+> echo "toolkit ref: $TOOLKIT_REF"
 >
-> # The pinned tag actually exists (drafts have no tag)
-> gh api repos/skills/exercise-toolkit/git/ref/tags/TAG --jq .ref  # replace TAG with the selected repo-wide tag
+> # That tag actually exists. A draft release appears in the releases API but
+> # has no git tag, so every `uses:` pinned to it fails to resolve.
+> gh api "repos/skills/exercise-toolkit/git/ref/tags/$TOOLKIT_REF" --jq .ref
 >
 > # Every step file has exactly one non-empty Theory block and at least one
 > # Activity block containing numbered instructions. Counting headings is not
