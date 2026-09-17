@@ -658,6 +658,7 @@ Run these before reporting the bootstrap complete:
 > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
 >
 > ```bash
+> set -euo pipefail
 > # No placeholder text left behind
 > if grep -Rni "replace-me" README.md .github/; then
 >   echo "placeholder text found" >&2
