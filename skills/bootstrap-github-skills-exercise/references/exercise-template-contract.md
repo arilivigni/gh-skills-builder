@@ -704,15 +704,37 @@ Run these before reporting the bootstrap complete:
 >
 > ```bash
 > set -euo pipefail
-> # No placeholder text left behind
-> if grep -Rni "replace-me" README.md .github/; then
->   echo "placeholder text found" >&2
->   exit 1
-> else
->   status=$?
->   if [ "$status" -ne 1 ]; then exit "$status"; fi
->   echo "no placeholders"
-> fi
+> # No placeholder text left behind. The skeletons in this reference use
+> # `replace-me` plus bare tokens (OWNER, REPO, TITLE, FEATURE, ORG) and
+> # bracketed slots such as [Step name], so check the whole set, not just one.
+> python3 - <<'PY'
+> import re, sys
+> from pathlib import Path
+>
+> TOKENS = [
+>     r"replace-me",
+>     r"\bOWNER\b", r"\bREPO\b", r"\bORG\b", r"\bTITLE\b", r"\bFEATURE\b",
+>     r"\bVISIBILITY\b", r"\bSOURCE_ORG\b", r"\bDEST_ORG\b",
+>     r"\[(?:Step name|Action|Exercise title|Theory title|Activity title)\]",
+>     r"Accomplishment #\d", r"Learning objective step #",
+> ]
+> pattern = re.compile("|".join(TOKENS))
+>
+> targets = [Path("README.md")] + [p for p in Path(".github").rglob("*")
+>                                  if p.is_file() and p.suffix in {".md", ".yml", ".yaml"}]
+> problems = []
+> for path in sorted(targets):
+>     if not path.exists():
+>         continue
+>     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+>         found = pattern.search(line)
+>         if found:
+>             problems.append(f"{path}:{number}: placeholder {found.group(0)!r}")
+>
+> if problems:
+>     sys.exit("\n".join(problems))
+> print("no placeholders")
+> PY
 >
 > # Structural audit: required files exist, at least one step exists, step files
 > # and step workflows line up by number, each workflow's declared name matches

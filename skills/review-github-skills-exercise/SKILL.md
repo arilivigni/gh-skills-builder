@@ -51,7 +51,8 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - The start workflow has a real first-run trigger, not only `workflow_dispatch`, unless the README explicitly
   tells the learner to start it manually. A README promising an automatic start with no event behind it
   leaves the learner on an apparently broken repository.
-- No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
+- No placeholder text remains in `README.md` or `.github/`: not only `replace-me`, but bare skeleton tokens
+  (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`) and bracketed slots such as `[Step name]`.
 - The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
 
 ### Activity block conventions

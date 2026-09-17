@@ -111,20 +111,30 @@ def check_skill_registration() -> None:
 
 
 def check_fence_balance() -> None:
-    """An unbalanced code fence silently swallows the rest of a document."""
+    """An unbalanced code fence silently swallows the rest of a document.
+
+    Fences inside blockquotes count too: this repository documents workflow
+    skeletons and activity blocks as `> ```yaml` inside blockquotes, and an
+    unclosed one there breaks rendering exactly the same way.
+    """
     for path in markdown_files():
         rel = path.relative_to(ROOT)
         depth = 0
         opened_at = 0
         opener = 0
-        for number, line in enumerate(read(path).splitlines(), 1):
-            match = re.match(r"^ {0,3}(`{3,})(.*)$", line)
+        opened_quoted = False
+        for number, raw in enumerate(read(path).splitlines(), 1):
+            # Normalize any blockquote prefix ("> ", ">> ", ">") before matching.
+            stripped = re.sub(r"^(\s*>)+\s?", "", raw)
+            quoted = stripped != raw
+            match = re.match(r"^ {0,3}(`{3,})(.*)$", stripped)
             if not match:
                 continue
             ticks, info = len(match.group(1)), match.group(2).strip()
             if depth == 0:
-                depth, opened_at, opener = 1, number, ticks
-            elif not info and ticks >= opener:
+                depth, opened_at, opener, opened_quoted = 1, number, ticks, quoted
+            elif not info and ticks >= opener and quoted == opened_quoted:
+                # Only a fence at the same quote depth can close the opener.
                 depth = 0
         if depth != 0:
             fail("fences", f"{rel}: unclosed code fence opened at line {opened_at}")

@@ -39,7 +39,8 @@ You are a high-signal reviewer for GitHub Skills exercise repositories. Surface 
 - The start workflow is guarded with `if: !github.event.repository.is_template`.
 - The start workflow has a real first-run trigger, not only `workflow_dispatch`, unless the README tells the
   learner to start it manually.
-- No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
+- No placeholder text remains in `README.md` or `.github/`: not only `replace-me`, but bare skeleton tokens
+  (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`) and bracketed slots such as `[Step name]`.
 - The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
 
 ### Activity block conventions

@@ -200,7 +200,9 @@ Terminal command:
 
 Do not report the bootstrap as done until all of these hold:
 
-1. No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
+1. No placeholder text remains in `README.md` or `.github/` — not only `replace-me`, but also bare skeleton
+   tokens (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`, `VISIBILITY`) and bracketed slots such as
+   `[Step name]` or `[Action]`.
 2. Every step file has exactly one Theory heading with content and at least one Activity heading with
    numbered instructions.
 3. Required files exist (`README.md`, `.github/steps/x-review.md`, `.github/workflows/0-start-exercise.yml`),
