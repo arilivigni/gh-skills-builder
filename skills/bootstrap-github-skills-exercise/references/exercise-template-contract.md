@@ -229,8 +229,8 @@ jobs:
       issues: write # create the exercise issue
     uses: skills/exercise-toolkit/.github/workflows/start-exercise.yml@v0.9.3
     with:
-      exercise-title: "Exercise title"
-      intro-message: "One line introduction message for the exercise"
+      exercise-title: "(replace-me: Exercise title)"
+      intro-message: "(replace-me: One line introduction message for the exercise)"
 
   post_next_step_content:
     name: Post next step content
@@ -533,32 +533,32 @@ jobs:
     uses: skills/exercise-toolkit/.github/workflows/finish-exercise.yml@v0.9.3
     with:
       issue-url: ${{ needs.find_exercise.outputs.issue-url }}
-      exercise-title: "Exercise title"
+      exercise-title: "(replace-me: Exercise title)"
 ```
 
 ## README skeleton
 
 ```markdown
-# Exercise title
+# (replace-me: Exercise title)
 
-_One-line description of the exercise_
+_(replace-me: One-line description of the exercise)_
 
 ## Welcome
 
-- **Who is this for**: Target audience description
-- **What you'll learn**: Learning objectives
-- **What you'll build**: Description of what the learner will create
+- **Who is this for**: (replace-me: Target audience description)
+- **What you'll learn**: (replace-me: Learning objectives)
+- **What you'll build**: (replace-me: Description of what the learner will create)
 - **Prerequisites**:
-  - Prerequisite skill or exercise
-  - Other prerequisites
+  - (replace-me: Prerequisite skill or exercise)
+  - (replace-me: Other prerequisites)
 
-- **How long**: This exercise takes less than 30 minutes to complete.
+- **How long**: This exercise takes less than (replace-me: 30) minutes to complete.
 
 In this exercise, you will:
 
-1. Learning objective step #1
-1. Learning objective step #2
-1. Learning objective step #N
+1. (replace-me: Learning objective step #1)
+1. (replace-me: Learning objective step #2)
+1. (replace-me: Learning objective step #N)
 
 ### How to start this exercise
 
@@ -587,38 +587,47 @@ If the exercise isn't ready in 20 seconds, please check the [Actions](../../acti
 The Copy Exercise badge URL must use the real `template_owner` and `template_name` of the published
 repository. Re-check it after any repository transfer.
 
+## Template slots
+
+Every slot an author must fill is marked with the `(replace-me: ...)` sentinel, matching the convention in
+`skills/exercise-template`. Keep it that way when you edit these skeletons.
+
+A bare descriptive phrase such as `Exercise title` or `First instruction` reads as real content, so a
+skeleton copied verbatim would sail past the no-placeholder gate and ship unusable learner content. One
+sentinel keeps a single token sufficient to catch every unfilled slot.
+
 ## Step skeleton (`N-step.md`)
 
 Every step file must contain exactly one `### 📖 Theory:` heading with real content and at least one
 `### ⌨️ Activity:` heading with numbered instructions.
 
 ```markdown
-## Step 1: Step name
+## Step 1: (replace-me: Step name)
 
-Brief story or scenario to introduce the step.
+(replace-me: Brief story or scenario to introduce the step)
 
-### 📖 Theory: Theory title
+### 📖 Theory: (replace-me: Theory title)
 
-Awareness-level background that directly supports the activity below. Two to five sentences.
+(replace-me: Awareness-level background that directly supports the activity below. Two to five sentences.)
 
 > [!NOTE]
-> Optional note relevant to this section.
+> (replace-me: Optional note relevant to this section)
 
-### ⌨️ Activity: Activity title
+### ⌨️ Activity: (replace-me: Activity title)
 
-1. First instruction.
+1. (replace-me: First instruction)
 
    Indent any multiline instruction content so the ordered list keeps numbering.
 
-1. Second instruction.
+1. (replace-me: Second instruction)
 
-1. Additional instructions as needed.
+1. (replace-me: Additional instructions as needed)
 
 <details>
 <summary>Having trouble? 🤷</summary><br/>
 
-- Troubleshooting tip or hint
-- Additional troubleshooting tips as needed
+- (replace-me: Troubleshooting tip or hint)
+- (replace-me: Additional troubleshooting tips as needed)
 
 </details>
 ```
@@ -672,20 +681,20 @@ Use the badge URLs verbatim. Do not restyle, recolor, or rename them. Keep the a
 ```markdown
 ## Review
 
-_Congratulations, you've completed this exercise and learned a lot about FEATURE._
+_Congratulations, you've completed this exercise and learned a lot about (replace-me: FEATURE)._
 
 <img src="https://octodex.github.com/images/jetpacktocat.png" alt="celebrate" width=200 align=right>
 
 Here's a recap of your accomplishments:
 
-- Accomplishment #1
-- Accomplishment #N
+- (replace-me: Accomplishment #1)
+- (replace-me: Accomplishment #N)
 
 ### What's next?
 
-- Natural follow-up Skills exercise, if there is one
-- Documentation link to learn more about the feature
-- Other resources or calls to action
+- (replace-me: Natural follow-up Skills exercise, if there is one)
+- (replace-me: Documentation link to learn more about the feature)
+- (replace-me: Other resources or calls to action)
 ```
 
 ## Images and callouts

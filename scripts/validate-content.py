@@ -312,6 +312,54 @@ def check_badges() -> None:
             fail("badges", f"canonical '{kind}' badge is not documented anywhere")
 
 
+def check_skeleton_slots() -> None:
+    """Every template slot in the contract's skeletons must carry the
+    `(replace-me: ...)` sentinel.
+
+    A bare descriptive phrase such as `Exercise title` or `First instruction`
+    reads as real content, so an author can copy a skeleton verbatim and pass
+    the no-placeholder gate while shipping unusable learner content. One
+    sentinel keeps the gate's single token sufficient.
+    """
+    path = ROOT / CONTRACT
+    if not path.exists():
+        return
+
+    phrases = [
+        "Exercise title", "One-line description of the exercise",
+        "Target audience description", "Learning objectives",
+        "Description of what the learner will create",
+        "Prerequisite skill or exercise", "Other prerequisites",
+        "Learning objective step", "Step name", "Theory title",
+        "Activity title", "First instruction", "Second instruction",
+        "Additional instructions as needed", "Troubleshooting tip or hint",
+        "Additional troubleshooting tips as needed", "Accomplishment #",
+        "Brief story or scenario to introduce the step",
+        "One line introduction message for the exercise",
+        "Natural follow-up Skills exercise",
+        "Documentation link to learn more about the feature",
+        "Other resources or calls to action",
+        "Optional note relevant to this section",
+    ]
+
+    text = read(path)
+    for match in re.finditer(r"^```(?:markdown|yaml)\n(.*?)^```$", text, flags=re.DOTALL | re.MULTILINE):
+        block = match.group(1)
+        base = text[: match.start()].count("\n") + 1
+        for offset, line in enumerate(block.splitlines(), 1):
+            for phrase in phrases:
+                if phrase not in line:
+                    continue
+                # The phrase must appear inside a (replace-me: ...) wrapper.
+                wrapped = re.search(r"\(replace-me:[^)]*" + re.escape(phrase), line)
+                if not wrapped:
+                    fail(
+                        "skeleton-slots",
+                        f"{CONTRACT}:{base + offset}: unmarked template slot {phrase!r}; "
+                        f"wrap it as (replace-me: ...)",
+                    )
+
+
 def check_toolkit_tag_online(ref: str | None) -> None:
     """A draft release appears in the releases API but has no git tag, so
     pinning it breaks every generated workflow."""
@@ -347,6 +395,7 @@ def main() -> int:
     check_yaml_blocks()
     ref = check_toolkit_refs()
     check_contract_self_consistency()
+    check_skeleton_slots()
     check_badges()
 
     if args.online:
