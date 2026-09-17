@@ -761,8 +761,8 @@ Run these before reporting the bootstrap complete:
 >
 >     # Least privilege: a workflow-level grant reaches every job, and the
 >     # learner-triggered grading job must not be able to toggle workflows.
->     if (document.get("permissions") or {}) not in ({}, None):
->         problems.append(f"{path}: grants workflow-level permissions; grant them per job instead")
+if document.get("permissions") != {}:
+        problems.append(f"{path}: must set workflow-level permissions: {{}} and grant them per job")
 >     grading = jobs.get("check_step_work") or {}
 >     if grading:
 >         granted = grading.get("permissions") or {}
