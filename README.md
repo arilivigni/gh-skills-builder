@@ -221,38 +221,42 @@ It checks that:
 ### Deployment plan
 
 1. Merge to `main` only after CI is green.
-2. Confirm `.github/plugin/plugin.json` has the intended release version.
-3. Prepare and verify first-release metadata from `main`:
+2. Bump `.github/plugin/plugin.json` to the intended release version **before** releasing, and confirm it:
 
    ```shell
    python3 -m json.tool .github/plugin/plugin.json >/dev/null
    grep '"version"' .github/plugin/plugin.json
    ```
 
-4. Validate install paths before tagging (use direct repo install as fallback until marketplace listing is available):
+3. Validate install paths (use direct repo install as fallback until marketplace listing is available):
 
    ```shell
    copilot plugin install arilivigni/gh-skills-builder
    copilot plugin list
    ```
 
-5. Tag and publish from `main`:
+4. Release from `main` by dispatching the `Release` workflow. It tags and publishes for you:
 
    ```shell
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
+   gh workflow run Release --ref main -f version=X.Y.Z
    ```
 
-6. Verify the tag points to the intended commit:
+   Leave `version` blank to use the manifest value. The workflow refuses to run from any ref other than
+   `main`, rejects a version that does not match `plugin.json`, then creates the annotated tag and the
+   release with generated notes.
+
+5. Verify the published release and that its tag resolves to the intended commit:
 
    ```shell
-   git rev-parse vX.Y.Z
+   gh release view vX.Y.Z --json tagName,isDraft,targetCommitish
+   gh api repos/arilivigni/gh-skills-builder/git/ref/tags/vX.Y.Z --jq .ref
    ```
 
-Example first stable release:
+> [!IMPORTANT]
+> Do not tag by hand. `git tag vX.Y.Z && git push` bypasses the workflow's version check, which is how
+> `v1.0.3` shipped while `plugin.json` still read `1.0.2`. Releasing through the workflow makes that
+> mismatch impossible.
 
-```shell
-git tag v1.0.0
-git push origin v1.0.0
-git rev-parse v1.0.0
-```
+> [!WARNING]
+> Do not use the workflow's `draft` input for a normal release. A draft release has no git tag, so anything
+> pinning `@vX.Y.Z` fails to resolve.
