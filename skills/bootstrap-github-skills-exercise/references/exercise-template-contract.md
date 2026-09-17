@@ -669,68 +669,92 @@ Run these before reporting the bootstrap complete:
 >   echo "no placeholders"
 > fi
 >
-> # Step content and step workflows line up, STEP_N_FILE/REVIEW_FILE targets
-> # exist, and every `gh workflow enable "Step N"` names a workflow that exists.
+> # Structural audit: required files exist, at least one step exists, step files
+> # and step workflows line up by number, each workflow's declared name matches
+> # its filename number, the last step is an N-last-step.yml that posts the
+> # review, referenced content files exist, enable targets exist, and grading
+> # jobs are wired into needs in both directions.
 > python3 - <<'PY'
-> import re, sys
+> import re, sys, yaml
 > from pathlib import Path
 >
 > problems = []
 > steps = Path(".github/steps")
 > flows = Path(".github/workflows")
 >
-> step_numbers = {int(m.group(1)) for p in steps.glob("*-step.md") if (m := re.match(r"(\d+)-step\.md$", p.name))}
-> workflow_files = sorted(flows.glob("*.yml"))
+> for required in (Path("README.md"), steps / "x-review.md", flows / "0-start-exercise.yml"):
+>     if not required.exists():
+>         problems.append(f"missing required file: {required}")
 >
-> names, numbers = {}, set()
-> for path in workflow_files:
+> step_numbers = {int(m.group(1)) for p in steps.glob("*-step.md")
+>                 if (m := re.fullmatch(r"(\d+)-step\.md", p.name))}
+> if not step_numbers:
+>     problems.append("no numbered step files found in .github/steps")
+>
+> workflow_numbers, names, last_steps, enables = {}, {}, [], []
+>
+> for path in sorted(flows.glob("*.yml")):
 >     text = path.read_text(encoding="utf-8")
+>     document = yaml.safe_load(text) or {}
 >
->     name = re.search(r"^name:\s*(.+?)\s*(?:#.*)?$", text, re.MULTILINE)
->     if name:
->         names[name.group(1).strip().strip('"\'')] = path
+>     declared = str(document.get("name", "")).strip()
+>     if declared:
+>         names[declared] = path
 >
 >     number = re.match(r"(\d+)-", path.name)
->     if number and int(number.group(1)) > 0:
->         numbers.add(int(number.group(1)))
+>     if number:
+>         value = int(number.group(1))
+>         if declared != f"Step {value}":
+>             problems.append(f"{path}: declares name {declared!r}, expected 'Step {value}'")
+>         if value > 0:
+>             workflow_numbers[value] = path
+>     if re.fullmatch(r"\d+-last-step\.yml", path.name):
+>         last_steps.append(path)
 >
->     # Referenced content files must exist.
->     for target in re.findall(r"^\s*(?:STEP_\d+_FILE|REVIEW_FILE):\s*[\"']?([^\"'\n]+)", text, re.MULTILINE):
+>     for target in re.findall(r"^\s*(?:STEP_\d+_FILE|REVIEW_FILE):\s*[\"\']?([^\"\'\n]+)", text, re.MULTILINE):
 >         if not Path(target.strip()).exists():
 >             problems.append(f"{path}: references missing file {target.strip()}")
 >
-> # Every enabled workflow name must exist.
-> for path in workflow_files:
->     for target in re.findall(r'gh workflow enable\s+"([^"]+)"', path.read_text(encoding="utf-8")):
->         if target not in names:
->             problems.append(f"{path}: enables '{target}', which no workflow declares")
+>     enables += [(path, name) for name in re.findall(r'gh workflow enable\s+"([^"]+)"', text)]
 >
-> missing_workflow = step_numbers - numbers
-> missing_step = numbers - step_numbers
+>     jobs = document.get("jobs") or {}
+>     has_grading = "check_step_work" in jobs
+>     for job_name, job in jobs.items():
+>         if job_name in {"find_exercise", "check_step_work"}:
+>             continue
+>         needs = (job or {}).get("needs") or []
+>         needs = [needs] if isinstance(needs, str) else list(needs)
+>         if has_grading and "check_step_work" not in needs:
+>             problems.append(f"{path}: job '{job_name}' does not need check_step_work, so grading cannot gate it")
+>         if not has_grading and "check_step_work" in needs:
+>             problems.append(f"{path}: job '{job_name}' needs check_step_work, but no such job exists")
+>
+> for path, target in enables:
+>     if target not in names:
+>         problems.append(f"{path}: enables '{target}', which no workflow declares")
+>
+> missing_workflow = step_numbers - set(workflow_numbers)
+> missing_step = set(workflow_numbers) - step_numbers
 > if missing_workflow:
 >     problems.append(f"step files with no matching workflow: {sorted(missing_workflow)}")
 > if missing_step:
 >     problems.append(f"step workflows with no matching step file: {sorted(missing_step)}")
 >
-> # A grading job that is not in `needs` lets the learner advance even when
-> # grading fails, which silently disables the check.
-> import yaml
-> for path in workflow_files:
->     document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
->     jobs = document.get("jobs") or {}
->     if "check_step_work" not in jobs:
->         continue
->     for job_name, job in jobs.items():
->         if job_name in {"find_exercise", "check_step_work"}:
->             continue
->         needs = job.get("needs") or []
->         needs = [needs] if isinstance(needs, str) else needs
->         if "check_step_work" not in needs:
->             problems.append(f"{path}: job '{job_name}' does not need check_step_work, so grading cannot gate it")
+> if len(last_steps) != 1:
+>     problems.append(f"expected exactly one N-last-step.yml, found {[str(p) for p in last_steps]}")
+> elif step_numbers:
+>     final = max(step_numbers)
+>     if not re.fullmatch(rf"{final}-last-step\.yml", last_steps[0].name):
+>         problems.append(f"last step should be {final}-last-step.yml, found {last_steps[0].name}")
+>     text = last_steps[0].read_text(encoding="utf-8")
+>     if "REVIEW_FILE" not in text:
+>         problems.append(f"{last_steps[0]}: final workflow does not reference REVIEW_FILE")
+>     if re.search(r'gh workflow enable\s+"', text):
+>         problems.append(f"{last_steps[0]}: final workflow should not enable another step")
 >
 > if problems:
 >     sys.exit("\n".join(problems))
-> print(f"step/workflow parity OK: steps {sorted(step_numbers)}, workflows {sorted(numbers)}")
+> print(f"structure OK: steps {sorted(step_numbers)}, workflows {sorted(workflow_numbers)}, last {last_steps[0].name}")
 > PY
 >
 > # Every toolkit reference is the same release tag.

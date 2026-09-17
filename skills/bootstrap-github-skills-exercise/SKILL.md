@@ -199,21 +199,24 @@ Do not report the bootstrap as done until all of these hold:
 1. No `replace-me` or other placeholder text remains in `README.md` or `.github/`.
 2. Every step file has exactly one Theory heading with content and at least one Activity heading with
    numbered instructions.
-3. Step content and step workflows line up by number, and the final workflow is `N-last-step.yml`.
-4. Every `gh workflow enable "Step N"` names a workflow that exists.
-5. Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists.
-6. Every `skills/exercise-toolkit` reference uses the same pinned tag.
-7. Each graded step's `post_next_step_content.needs` matches whether `check_step_work` exists.
+3. Required files exist (`README.md`, `.github/steps/x-review.md`, `.github/workflows/0-start-exercise.yml`),
+   there is at least one numbered step, step content and step workflows line up by number, each workflow's
+   declared `name: Step N` matches its filename number, and the final workflow is `N-last-step.yml` for the
+   highest step.
+4. Every `gh workflow enable "Step N"` names a workflow that exists, and the final workflow enables nothing.
+5. Every `STEP_N_FILE` and `REVIEW_FILE` value points at a file that exists, and the final workflow
+   references `REVIEW_FILE`.
+6. Every `skills/exercise-toolkit` reference uses the same pinned tag, and no toolkit checkout is unpinned.
+7. `post_next_step_content.needs` includes `check_step_work` when that job exists, and does not reference it
+   when it does not.
 8. All workflow YAML parses.
 9. The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
 10. The start workflow has a real first-run trigger enabled, not only `workflow_dispatch` — or the README
     explicitly tells the learner to start the exercise by running the workflow manually. The advertised
     "copy and wait" start path must have an event behind it.
 
-The contract reference includes a copy-ready command block that mechanically verifies gates 1 through 8:
-placeholders, Theory and Activity content, step/workflow parity, `gh workflow enable` targets, `STEP_N_FILE`
-and `REVIEW_FILE` paths, toolkit ref consistency and pinning, `needs` wiring, and YAML parsing. Gates 9 and
-10 are judgement calls and need a human read.
+The contract reference includes a copy-ready command block that mechanically verifies gates 1 through 8.
+Gates 9 and 10 are judgement calls and need a human read.
 
 ## Report back
 
