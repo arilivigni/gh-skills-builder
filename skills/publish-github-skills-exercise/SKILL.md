@@ -128,6 +128,7 @@ manual recovery path. Do not retry destructive operations or work around a permi
   content is `.github/steps/x-review.md`.
 - Every `skills/exercise-toolkit` reference uses the same pinned release tag.
 - Workflows use least-privilege permissions and have clear trigger behavior.
+- The start workflow has a real first-run trigger, or the README explicitly documents a manual start.
 - Exercise workflows are disabled by default and only run as the learner progresses through the exercise.
 - Validation evidence is available: tests, dry run, or documented manual checks.
 - Reset/retry behavior is documented and safe for repeated learners.
@@ -153,6 +154,8 @@ Expected callout formatting:
 ## Publish recommendation
 
 ## Release summary
+
+## Files or areas changed
 
 ## Validation evidence
 

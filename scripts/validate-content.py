@@ -110,6 +110,39 @@ def check_skill_registration() -> None:
         fail("skills", f"skills/{name} has a SKILL.md but is not registered in plugin.json")
 
 
+def check_lifecycle_topology() -> None:
+    manifest = json.loads(read(ROOT / ".github/plugin/plugin.json"))
+    expected_agent = Path("agents/github-skills-orchestrator.agent.md")
+    agents = {p.relative_to(ROOT) for p in ROOT.glob("agents/*.agent.md")}
+    if agents != {expected_agent}:
+        fail("lifecycle", f"expected only {expected_agent}; found {sorted(str(p) for p in agents)}")
+    if manifest.get("agents") != ["./agents"]:
+        fail("lifecycle", "manifest must register the orchestrator via ./agents")
+
+    expected_skills = {
+        "orchestrate-github-skills-exercise",
+        "create-github-skills-outline",
+        "bootstrap-github-skills-exercise",
+        "review-github-skills-exercise",
+        "publish-github-skills-exercise",
+    }
+    on_disk = {p.parent.name for p in ROOT.glob("skills/*/SKILL.md")}
+    registered = manifest.get("skills", [])
+    expected_paths = {f"./skills/{name}" for name in expected_skills}
+    if on_disk != expected_skills or set(registered) != expected_paths or len(registered) != 5:
+        fail("lifecycle", "expected exactly the five lifecycle skills on disk and in the manifest")
+
+    paths = markdown_files() + [ROOT / "evals/evals.json", ROOT / ".github/plugin/plugin.json"]
+    agent_reference = re.compile(
+        r"@github-skills-[a-z0-9]+(?:-[a-z0-9]+)*"
+        r"|\bgithub-skills-(?:outline-architect|exercise-builder|quality-reviewer|publisher)\b"
+    )
+    for path in paths:
+        for name in agent_reference.findall(read(path)):
+            if name != "@github-skills-orchestrator":
+                fail("lifecycle", f"{path.relative_to(ROOT)}: obsolete specialist-agent reference {name}")
+
+
 def check_fence_balance() -> None:
     """An unbalanced code fence silently swallows the rest of a document.
 
@@ -391,6 +424,7 @@ def main() -> int:
 
     check_agents()
     check_skill_registration()
+    check_lifecycle_topology()
     check_fence_balance()
     check_yaml_blocks()
     ref = check_toolkit_refs()

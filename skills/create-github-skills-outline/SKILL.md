@@ -9,6 +9,10 @@ Use this skill to design a self-paced GitHub Skills-style exercise before implem
 is a build contract: `bootstrap-github-skills-exercise` should be able to generate the repository from it
 without guessing.
 
+Start from the learner outcome, not the tool list. Prefer concrete GitHub actions such as editing a file,
+opening a pull request, resolving feedback, running a workflow, or inspecting a result. Keep the exercise
+small enough for one focused sitting and surface prerequisites and assumptions early.
+
 ## Workflow
 
 1. Clarify the topic, target learner, prerequisites, time box, and desired outcome.

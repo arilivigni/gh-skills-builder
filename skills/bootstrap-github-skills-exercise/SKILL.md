@@ -34,6 +34,11 @@ Before editing, identify existing conventions:
 - Whether reusable local actions or scripts already render Markdown templates.
 - Existing test commands or workflow harnesses.
 
+Reuse established patterns. Keep learner-facing copy concise, encouraging, and action-oriented, and
+maintainer-facing logic explicit and testable. Prefer shared local actions or scripts for repeated rendering
+or validation. When a test harness exists, add appropriate tests, fixtures, or a maintainer validation script.
+Do not overwrite learner or maintainer edits after bootstrap unless the user explicitly requests regeneration.
+
 ## Build order
 
 Work in this order so each file can reference something that already exists:
@@ -119,7 +124,8 @@ If `check_step_work` is present, include it in `post_next_step_content.needs`. I
   previous step.
 - Guard the start workflow with `if: !github.event.repository.is_template`.
 - Make check workflows fail helpfully before they pass. Every check uses `continue-on-error: true` and a row
-  in the `step-results-table.md` `results_table`.
+  in the `step-results-table.md` `results_table`, with a stable `id` and a closing
+  `if: contains(steps.*.outcome, 'failure')` failure step.
 - Update the existing feedback comment via `peter-evans/find-comment` rather than posting duplicates. Always
   scope the lookup with `comment-author` and `body-includes`: a bare `direction: last` returns whatever was
   posted most recently, so `edit-mode: replace` can overwrite a learner's own comment.
@@ -128,6 +134,10 @@ If `check_step_work` is present, include it in `post_next_step_content.needs`. I
 - Use `paths` filters on push-based triggers where practical to avoid accidental transitions from unrelated
   commits.
 - Ensure the last step finishes the exercise instead of enabling a non-existent next step.
+
+Confirm the first-run path works from a fresh repository copy and each grading workflow fails with useful
+feedback before it passes. Make completion behavior explicit: close the issue, comment success, open the
+next issue, or show the final result as appropriate.
 
 ## Step content requirements
 
@@ -231,6 +241,7 @@ When the build round finishes, tell the user:
 - the files created or changed,
 - which steps are graded and what each grading check asserts,
 - anything you had to decide on their behalf,
-- what to review first.
+- what to review first,
+- which completion gates pass and which do not.
 
 Then stop and wait for approval or change requests before starting another round.

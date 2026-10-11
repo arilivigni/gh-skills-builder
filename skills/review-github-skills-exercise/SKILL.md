@@ -7,6 +7,17 @@ description: "Review GitHub Skills exercises for learner experience, validation 
 
 Use this skill to review an exercise draft with a high signal-to-noise ratio.
 
+## Report-only boundary
+
+Do not edit exercise files, apply fixes, or change repository or remote state during review, even when edit
+and command tools are available. Use inspection and validation that do not modify the exercise; if a check
+requires changes or a live exercise run, report it as unverified rather than performing it during review.
+After reporting findings and proposed fixes, stop and wait for the user to choose which fixes to apply.
+Approved fixes belong to a separate bootstrap round, followed by another review.
+
+This is a behavioral rule, not a tool-permission boundary. A review performed by the same agent that built
+the exercise is not independent review.
+
 ## Review process
 
 1. Read the README and identify the promised learner outcome.
@@ -34,6 +45,7 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 
 - The start path is obvious.
 - Each step explains what to do and why it matters.
+- Objectives match the tasks, which require meaningful practice with concise explanations.
 - Feedback helps the learner recover from common mistakes.
 - Completion is visible and satisfying.
 
@@ -92,6 +104,7 @@ Use this skill to review an exercise draft with a high signal-to-noise ratio.
 - Links are descriptive.
 - Markdown is readable in GitHub.
 - Repeated logic is shared or documented.
+- Reset behavior and maintainer test instructions are clear.
 - Ordered activity steps render with correct numbering (no broken lists caused by mixed blocks).
 - `[!NOTE]`, `[!IMPORTANT]`, and `[!TIP]` callouts are left-justified (no indentation).
 
@@ -118,6 +131,12 @@ Expected callout formatting:
 ## Nice to improve
 
 ## Suggested validation
+
+## Unverified checks
 ```
 
 If no issues are found in a category, say `None`.
+
+For each finding, include the file/location, why it matters, and a concrete fix. Order findings by priority.
+If the exercise is ready, say so plainly and list the final checks already covered. Disclose anything that
+could not be verified without running the exercise. Report findings and stop; do not implement fixes.

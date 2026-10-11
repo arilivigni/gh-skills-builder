@@ -12,7 +12,9 @@ This repository contains a GitHub Copilot plugin for creating GitHub Skills exer
 
 ## Editing guidance
 
-- Keep each agent and skill tied to a clear stage of the exercise lifecycle.
+- Keep one thin orchestrator agent responsible for sequencing, approval gates, and publication authorization.
+- Put stage-specific requirements in the corresponding lifecycle skills; load skills directly rather than adding specialist agents.
+- Keep review report-only until the user approves a separate fix round. This is a behavioral rule, not restricted tool access or independent review.
 - Prefer learner-centered language: objectives, scenario, practice loop, validation, feedback, and completion criteria.
 - Preserve the GitHub Skills conventions of issue-driven steps, workflow-backed validation, clear learner feedback, and safe repository automation.
 - Avoid destructive workflow guidance. Any generated workflow should use least-privilege permissions and explain what it changes.
