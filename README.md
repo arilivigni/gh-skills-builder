@@ -1,4 +1,4 @@
-Design, build, review, and publish GitHub Skills-style exercises with custom agents and Agent Skills for learner journeys, workflow-backed validation, and release readiness.
+Design, build, review, and publish GitHub Skills-style exercises with one coordinating agent and five Agent Skills for learner journeys, workflow-backed validation, and release readiness.
 
 ## Installation
 
@@ -49,15 +49,23 @@ copilot plugin uninstall gh-skills-builder
 
 ## What's Included
 
-### Agents
+### Agent
 
 | Agent | Mention | Role | Tool Access |
 | --- | --- | --- | --- |
 | **Orchestrator** | `@github-skills-orchestrator` | Runs the full lifecycle as an approval-gated loop, checking in with you after every build round and every review round. | Full coding and test tools |
-| **Outline Architect** | `@github-skills-outline-architect` | Converts an idea, workshop, or demo into a learner-centered exercise outline with objectives, scenario, steps, validation, and success criteria. | Read, search, fetch, and edit planning docs |
-| **Exercise Builder** | `@github-skills-exercise-builder` | Converts an approved outline into repository structure, Markdown steps, issue flow, workflows, and validation scaffolding. | Full coding and test tools |
-| **Quality Reviewer** | `@github-skills-quality-reviewer` | Reviews an exercise for learning value, validation reliability, workflow safety, accessibility, and publish readiness. | Read, search, run commands, and run tests |
-| **Publisher** | `@github-skills-publisher` | Prepares release notes, PR descriptions, validation evidence, final checklist, and publication or org transfer guidance. | Read, edit docs, run commands, and run tests |
+
+The orchestrator loads the relevant skill for each phase. Skills own stage-specific requirements; the agent
+keeps sequencing, approval gates, and publication authorization explicit.
+
+> [!IMPORTANT]
+> Review reports findings and stops before fixes. This is a behavioral rule, not a restricted tool-permission
+> boundary: the orchestrator still has edit tools. Reviewing its own work is not independent review. If you
+> need independent review or enforced restricted access, arrange it separately.
+
+**Migrating to 2.0:** The four specialist agent entry points have been removed. Replace their mentions with
+`@github-skills-orchestrator` and invoke the corresponding phase skill, as shown below. All five skill names
+are unchanged.
 
 ### Skills
 
@@ -75,8 +83,8 @@ The plugin provides five lifecycle skills:
 conventions implemented by [`skills/exercise-template`](https://github.com/skills/exercise-template) and
 [`skills/exercise-toolkit`](https://github.com/skills/exercise-toolkit): canonical file names, workflow
 skeletons, reusable workflow inputs and outputs, action pins, workflow enable/disable chaining, permission
-matrix, grading job shape, and the README, step, and review Markdown skeletons. The bootstrap skill and the
-Exercise Builder agent read it before writing files.
+matrix, grading job shape, and the README, step, and review Markdown skeletons. The orchestrator reads it
+through the bootstrap skill before writing files.
 
 ## Quick Start
 
@@ -109,35 +117,36 @@ flowchart LR
 #### 1. Create the exercise outline
 
 ```
-@github-skills-outline-architect I want to teach [topic] as a 30-minute GitHub Skills exercise.
+@github-skills-orchestrator I want to teach [topic] as a 30-minute GitHub Skills exercise.
 Use /create-github-skills-outline to define objectives, learner steps, and validation ideas.
 ```
 
 #### 2. Bootstrap the repository
 
 ```
-@github-skills-exercise-builder Use the approved outline to scaffold the exercise.
+@github-skills-orchestrator Use the approved outline to scaffold the exercise.
 Use /bootstrap-github-skills-exercise to create README content, steps, workflows, and validation guidance.
 ```
 
 #### 3. Review before launch
 
 ```
-@github-skills-quality-reviewer Review this exercise for learner clarity, validation reliability, workflow safety, and accessibility.
-Use /review-github-skills-exercise and prioritize release blockers.
+@github-skills-orchestrator Review this exercise for learner clarity, validation reliability, workflow safety, and accessibility.
+Use /review-github-skills-exercise, prioritize release blockers, and report findings without editing files.
 ```
 
 #### 4. Prepare for publication
 
 ```
-@github-skills-publisher Prepare this exercise for release.
+@github-skills-orchestrator Prepare this exercise for release.
 Use /publish-github-skills-exercise to produce validation evidence, PR description, release notes, and remaining risks.
 ```
 
 To publish into an organization or move an existing exercise between organizations:
 
 ```
-@github-skills-publisher Transfer this exercise from source-org to dest-org and fix the Copy Exercise badge afterward.
+@github-skills-orchestrator Use /publish-github-skills-exercise to plan a transfer of source-org/exercise-repo to dest-org/exercise-repo.
+Wait for my explicit authorization before transferring, then fix the Copy Exercise badge afterward.
 ```
 
 ## How It Works
@@ -150,7 +159,9 @@ The plugin splits exercise creation into four focused phases so the human can ap
 - **Publish last** — assemble release evidence and handoff notes for contribution, rollout, or org transfer.
 
 The Orchestrator agent runs these phases as a loop with four gates and **stops for a user check-in after every
-build round and every review round**, so work is never chained build → review → build without review.
+build round and every review round**, so work is never chained build → review → build without a user
+check-in. Approved fixes run through the bootstrap skill; after build approval, the review skill is loaded
+again before publication can proceed.
 
 ## Exercise conventions
 
@@ -174,7 +185,10 @@ The Awesome Copilot plugin spec declares plugin content with `agents`, `commands
 
 ## Evaluation
 
-Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review, publish readiness, orchestrated loop handling, and org-to-org transfer.
+Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review,
+publish readiness, direct skill routing, report-only review and approved fix rounds, orchestrated loop
+handling, and org-to-org transfer. These prompts describe behavioral expectations; they do not enforce
+permissions or establish independent review.
 
 ## Release process (SemVer)
 
@@ -210,6 +224,7 @@ It checks that:
 | Check | Catches |
 | --- | --- |
 | Agent frontmatter | Missing `name`/`description`, names that are not lowercase kebab-case, or names that disagree with the filename. The manifest only references `./agents` as a directory, so nothing else validates these. |
+| Lifecycle topology | Anything other than the single orchestrator and five lifecycle skills, or obsolete specialist-agent mentions in maintained plugin content. |
 | Skill registration | A skill with a `SKILL.md` that was never added to `plugin.json`. |
 | Code fence balance | An unclosed fence that silently swallows the rest of a document. |
 | YAML blocks | A workflow skeleton that does not parse. These get copy-pasted into real exercises. |
