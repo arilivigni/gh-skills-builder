@@ -30,7 +30,12 @@ Confirm which path applies before running anything:
 
 ### Path A: publish to a personal account or organization
 
-1. Confirm target owner/repository and whether a remote already exists.
+1. Confirm target owner/repository and whether a remote already exists. Propose the repository name approved
+   in the outline's Exercise identity section (saved in `.github/exercise-outline.md`) as the default, and
+   the outline's target owner when it names one. A default is a proposal, not authorization: the user must
+   still explicitly confirm the exact owner and repository. If they choose a different name, update the
+   README Copy Exercise badge (`template_name`, `name=skills-<repository name>`) and the saved outline before
+   pushing.
 2. **Confirm the intended visibility explicitly.** Ask the user whether the exercise should be public or
    private, and use the matching flag. Never default to public: a repository meant to be private is exposed
    the moment it is created, and flipping the flag afterwards does not undo that exposure.
@@ -119,6 +124,8 @@ manual recovery path. Do not retry destructive operations or work around a permi
 
 - README includes title, Welcome block, learner audience, prerequisites, duration, start path, and support path.
 - The Copy Exercise badge uses the correct `template_owner` and `template_name` for the published location.
+- The published repository name matches the approved name in `.github/exercise-outline.md`, or the outline
+  and badge were updated together when the name changed.
 - Exercise steps match the stated objectives.
 - Every step has a Theory block with real content and at least one Activity block.
 - Copilot prompts and terminal commands in activities use the standard badge blocks.

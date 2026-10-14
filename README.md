@@ -72,10 +72,10 @@ are unchanged.
 The plugin provides five lifecycle skills:
 
 - `/orchestrate-github-skills-exercise` — run the whole loop with approval gates between every round.
-- `/create-github-skills-outline` — design a new exercise or convert training material into a self-paced GitHub Skills outline.
-- `/bootstrap-github-skills-exercise` — create repository files, step Markdown, workflow plans, validation scripts, and starter structure from an approved outline.
+- `/create-github-skills-outline` — design a new exercise or convert training material into a self-paced GitHub Skills outline, including an eye-catching title and repository name candidates approved at Gate 1.
+- `/bootstrap-github-skills-exercise` — create the repository shell (saved outline in `.github/exercise-outline.md` plus a README stub with the approved name), then step Markdown, workflows, validation scripts, and starter structure.
 - `/review-github-skills-exercise` — audit an exercise for learner experience, validation correctness, workflow safety, accessibility, and readiness.
-- `/publish-github-skills-exercise` — prepare final checklist, release notes, PR copy, validation evidence, and publish or transfer guidance.
+- `/publish-github-skills-exercise` — prepare final checklist, release notes, PR copy, validation evidence, and publish or transfer guidance, defaulting the target to the approved repository name while still requiring explicit authorization.
 
 ### Template contract reference
 
@@ -153,8 +153,8 @@ Wait for my explicit authorization before transferring, then fix the Copy Exerci
 
 The plugin splits exercise creation into four focused phases so the human can approve the learning design before repository automation is generated:
 
-- **Outline first** — define the learner outcome, scenario, steps, and validation signals. Every step needs a Theory block and at least one Activity block.
-- **Bootstrap second** — create or update repository assets only after the outline is approved.
+- **Outline first** — define the learner outcome, scenario, exercise title, repository name, steps, and validation signals. Every step needs a Theory block and at least one Activity block.
+- **Bootstrap second** — create or update repository assets only after the outline is approved, starting with the repository shell: the saved outline and a README stub carrying the approved title and name.
 - **Review third** — catch weak validation, unsafe workflow behavior, unclear learner instructions, missing Theory or Activity blocks, and accessibility issues.
 - **Publish last** — assemble release evidence and handoff notes for contribution, rollout, or org transfer.
 
@@ -185,7 +185,7 @@ The Awesome Copilot plugin spec declares plugin content with `agents`, `commands
 
 ## Evaluation
 
-Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review,
+Test prompts are in `evals/evals.json`. They cover outline creation, exercise naming, bootstrap planning, quality review,
 publish readiness, direct skill routing, report-only review and approved fix rounds, orchestrated loop
 handling, and org-to-org transfer. These prompts describe behavioral expectations; they do not enforce
 permissions or establish independent review.

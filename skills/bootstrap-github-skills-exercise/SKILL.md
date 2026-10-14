@@ -20,9 +20,10 @@ Do not start until you have:
 1. An approved outline. If none exists, run `create-github-skills-outline` first.
 2. A step-by-step journey where **every step has a Theory block and at least one Activity block**.
 3. A decision for each step on whether it is graded and what the grading check asserts.
+4. An approved exercise title and repository name from the outline's Exercise identity section.
 
-If the outline is missing a Theory or an Activity for any step, stop and resolve it with the user. Do not
-invent filler content to fill the gap.
+If the outline is missing a Theory or an Activity for any step, or has no approved title and repository
+name, stop and resolve it with the user. Do not invent filler content or pick a name on the user's behalf.
 
 ## First inspect the repo
 
@@ -39,23 +40,42 @@ maintainer-facing logic explicit and testable. Prefer shared local actions or sc
 or validation. When a test harness exists, add appropriate tests, fixtures, or a maintainer validation script.
 Do not overwrite learner or maintainer edits after bootstrap unless the user explicitly requests regeneration.
 
+## Repository shell (first action)
+
+Before writing any step or workflow, create the repository shell. It locks in the approved identity and
+gives later rounds and resumption a durable record of the outline:
+
+1. Save the approved outline verbatim to `.github/exercise-outline.md`. If the target repository already
+   stores its outline elsewhere, reuse that location and say so.
+2. Write `README.md` from the contract's README skeleton, filling the title, one-line summary, and Welcome
+   block from the outline.
+3. Fill the Copy Exercise badge from the Exercise identity: `template_name` is the approved repository name,
+   `name` is `skills-<repository name>`, and `description` uses the approved title. Use the target owner for
+   `template_owner` when the outline names one; otherwise ask the user. If the owner is still undecided,
+   leave the `OWNER` token in place and report it, so the no-placeholder gate catches it before publish.
+
+Do not create, rename, or push a GitHub repository from this skill. Repository creation belongs to
+`publish-github-skills-exercise` behind explicit authorization.
+
 ## Build order
 
 Work in this order so each file can reference something that already exists:
 
-1. `README.md` — title, Welcome block, objectives, Copy Exercise badge, troubleshooting details.
-2. `.github/steps/N-step.md` for every step.
-3. `.github/steps/x-review.md`.
-4. `.github/workflows/0-start-exercise.yml`.
-5. `.github/workflows/N-step.yml` for each intermediate step.
-6. `.github/workflows/N-last-step.yml`.
-7. Grading jobs, local actions, or scripts.
-8. Maintainer validation notes.
+1. Repository shell — `.github/exercise-outline.md` and the `README.md` stub described above.
+2. `README.md` — complete the objectives, start path, and troubleshooting details.
+3. `.github/steps/N-step.md` for every step.
+4. `.github/steps/x-review.md`.
+5. `.github/workflows/0-start-exercise.yml`.
+6. `.github/workflows/N-step.yml` for each intermediate step.
+7. `.github/workflows/N-last-step.yml`.
+8. Grading jobs, local actions, or scripts.
+9. Maintainer validation notes.
 
 ## Required file set
 
 | File | Required |
 | --- | --- |
+| `.github/exercise-outline.md` | always, unless the repository already records the outline elsewhere |
 | `README.md` | always |
 | `.github/steps/N-step.md` | one per step |
 | `.github/steps/x-review.md` | always |
@@ -226,7 +246,8 @@ Do not report the bootstrap as done until all of these hold:
 7. `post_next_step_content.needs` includes `check_step_work` when that job exists, and does not reference it
    when it does not.
 8. All workflow YAML parses.
-9. The README Copy Exercise badge uses the correct `template_owner` and `template_name`.
+9. The README title matches the approved exercise title, and the Copy Exercise badge uses the correct
+   `template_owner`, `template_name` equal to the approved repository name, and `name=skills-<repository name>`.
 10. The start workflow has a real first-run trigger enabled, not only `workflow_dispatch` — or the README
     explicitly tells the learner to start the exercise by running the workflow manually. The advertised
     "copy and wait" start path must have an event behind it.

@@ -587,6 +587,11 @@ If the exercise isn't ready in 20 seconds, please check the [Actions](../../acti
 The Copy Exercise badge URL must use the real `template_owner` and `template_name` of the published
 repository. Re-check it after any repository transfer.
 
+`template_name` is the repository name approved in the outline's Exercise identity section, `name` is
+`skills-` followed by that name, and `description` carries the approved title. Keep these aligned with
+`.github/exercise-outline.md`; if the name changes at publish time, update the badge and the saved outline
+together.
+
 ## Template slots
 
 Every slot an author must fill is marked with the `(replace-me: ...)` sentinel, matching the convention in

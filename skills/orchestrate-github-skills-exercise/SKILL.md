@@ -57,12 +57,15 @@ These are not optional.
 Load `create-github-skills-outline`. Iterate with the user on each revision, stating what changed and what
 still needs a decision.
 
-Gate 1 passes when the user explicitly approves the outline. Before moving on, confirm:
+Gate 1 passes when the user explicitly approves the outline, including its title and repository name. Before
+moving on, confirm:
 
+- the exercise title and one repository name are approved, and the learner copy name is `skills-<name>`,
 - every step has a Theory block with real content and at least one Activity block,
 - every step has an Actions Trigger and a Grading-Check decision,
 - the file map names real files aligned by number,
-- the approved outline's storage location is recorded.
+- the approved outline's storage location is recorded; bootstrap saves it to `.github/exercise-outline.md`
+  as its first action.
 
 ## Phase 2: Bootstrap
 
@@ -106,8 +109,9 @@ rounds, stop and escalate.
 Load `publish-github-skills-exercise` to produce validation evidence, the release checklist, PR copy, and
 release notes.
 
-Gate 4 passes only when the user explicitly authorizes the action and names the target. Confirm which path
-applies:
+Gate 4 passes only when the user explicitly authorizes the action and names the target. Propose the
+approved repository name as the default target, but do not treat the Gate 1 name approval as publish
+authorization. Confirm which path applies:
 
 - publish to a personal account,
 - publish to an organization,
@@ -121,7 +125,7 @@ If the user asks what is next on an existing exercise, determine the current pha
 
 | Observation | Phase |
 | --- | --- |
-| No outline recorded | Phase 1 |
+| No outline recorded (no `.github/exercise-outline.md` or other recorded outline) | Phase 1 |
 | Outline approved, no `.github/steps/` content | Phase 2 |
 | Steps and workflows exist | Phase 3 |
 | Steps and workflows exist **and** a recorded review sign-off exists | Phase 4 |
