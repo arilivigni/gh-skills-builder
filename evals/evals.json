@@ -129,7 +129,8 @@
       "expectations": [
         "The output includes an Exercise identity section with a title and 3 to 5 lowercase, hyphen-separated repository name candidates.",
         "The output names one recommended repository name with a rationale and shows the learner copy name as skills-<name>.",
-        "No candidate repository name starts with a skills- prefix.",
+        "No candidate title or repository name contains a skills- prefix.",
+        "The title and name candidates are derived from the prompt's topic and outcome (Copilot app, shipping a feature) rather than generic names.",
         "The output asks the user to approve the title and repository name with the outline and does not create files, check availability, or create a repository."
       ]
     }

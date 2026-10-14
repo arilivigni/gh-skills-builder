@@ -49,12 +49,15 @@ and publish uses it as the default target.
 
 - **Title** — eye-catching and outcome-focused. A short hook plus the concrete outcome works well, for
   example `Cleared for Takeoff: Ship a Feature with the GitHub Copilot App`.
+- **Derive both from the exercise abstract.** Base the title and every name candidate on the exercise
+  abstract prompt the user gave (its topic, learner outcome, and scenario), not on generic product names.
+  If the abstract changes during revision, re-check that the title and names still fit.
 - **Repository name candidates** — offer 3 to 5. Each must be lowercase, hyphen-separated, use only
   letters, digits, and hyphens, start with a letter, and stay under about 40 characters. Lead with the
   product or topic so the name sorts and searches well, then add the hook, for example
   `copilot-app-cleared-for-takeoff`.
-- **Do not add a `skills-` prefix.** The Copy Exercise badge names the learner's copy `skills-<repository>`,
-  so a prefixed template would produce `skills-skills-...`.
+- **Never include a `skills-` prefix** in the title or any candidate name. The Copy Exercise badge adds it
+  when naming the learner's copy (`skills-<repository>`), so a prefixed name would produce `skills-skills-...`.
 - **Recommended pick** — name one candidate and say why in a sentence.
 - **Learner copy name** — show the resulting `skills-<repository>` name.
 
@@ -124,7 +127,7 @@ One-line description of the exercise.
 ## Exercise identity
 
 - **Title**: [Eye-catching, outcome-focused title]
-- **Repository name candidates**:
+- **Repository name candidates** (derived from the exercise abstract, no `skills-` prefix):
   1. `[lowercase-hyphenated-name]` — [why]
   1. `[lowercase-hyphenated-name]` — [why]
   1. `[lowercase-hyphenated-name]` — [why]
