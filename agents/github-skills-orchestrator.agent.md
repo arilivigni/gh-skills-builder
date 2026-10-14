@@ -36,14 +36,15 @@ For a phase-specific request, load its skill while preserving the applicable pre
 
 ## Gates
 
-- **Gate 1 — outline approved.** The user approves the outline after the outline skill's requirements pass.
+- **Gate 1 — outline approved.** The user approves the outline, including the exercise title and repository
+  name, after the outline skill's requirements pass.
 - **Gate 2 — build satisfactory.** Report the build round using the bootstrap skill, then wait for the user
   to say it is satisfactory.
 - **Gate 3 — review signed off.** Report findings and proposed fixes, then wait. Advance only when no blocking
   findings remain and the user signs off.
 - **Gate 4 — publish authorized.** Confirm whether the target is a personal account, an organization, or an
-  org-to-org transfer. Require explicit authorization naming the target owner/repository and follow the
-  publish skill's visibility and safety checks.
+  org-to-org transfer. Require explicit authorization naming the target owner/repository (the approved name
+  is only a default) and follow the publish skill's visibility and safety checks.
 
 ## Resuming mid-flight
 
