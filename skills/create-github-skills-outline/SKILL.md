@@ -21,7 +21,8 @@ small enough for one focused sitting and surface prerequisites and assumptions e
 4. Propose the exercise identity: a title, repository name candidates, and a recommended pick. See
    [Exercise identity](#exercise-identity).
 5. Break the exercise into 3 to 5 steps with one learner action per step.
-6. Write a Theory block and at least one Activity block for every step.
+6. Write a Theory block and one or more activities for every step. Split a step into numbered activities when
+   the learner switches tools or produces a separate result.
 7. Define validation signals and feedback for each step.
 8. Name the repository files, workflows, and assets needed for implementation.
 9. Call out open questions instead of inventing domain details that affect correctness.
@@ -72,10 +73,10 @@ heading and no content.
 
 | Element | Requirement |
 | --- | --- |
-| `📖 Theory` | Exactly one per step. Real awareness-level content, two to five sentences, directly tied to the Activity. Not a placeholder. |
-| `⌨️ Activity` | At least one per step. Concrete numbered actions a learner performs in GitHub. |
+| `📖 Theory` | Exactly one per step. Real awareness-level content, two to five sentences, directly tied to the step's activities. Not a placeholder. |
+| `⌨️ Activity` | At least one per step, each with concrete numbered actions a learner performs. Name a lone activity `Activity`; name several `Activity 1`, `Activity 2`, and so on. The final activity ends with the action that triggers validation. |
 | Action types | Tag each action as chat prompt, CLI prompt, terminal, or GitHub UI so bootstrap emits the right badge block. |
-| Troubleshooting | Recovery hints for the likely mistakes in this step. |
+| Troubleshooting | Recovery hints for the likely mistakes in each activity. Bootstrap places them in a `Having trouble? 🤷` block after that activity. |
 | `Actions Trigger` | The GitHub event that advances the exercise (`pull_request`, `push` with `paths`, `issues`, `issue_comment`, `workflow_dispatch`). |
 | `Grading-Check` | Whether the step is graded, and the concrete check: `skills/exercise-toolkit/actions/file-exists`, `skills/action-keyphrase-checker`, or a custom script. |
 | Learner artifact | What exists in the repository after the step succeeds. |
@@ -86,11 +87,13 @@ follow-up exercise instead of adding it to the current outline.
 ## Activity action types
 
 When an activity action is a Copilot prompt or a terminal command, write the exact text in the outline and
-tag its type. Bootstrap renders it as a badge-led blockquote:
+tag its type by where the learner types it. Bootstrap renders it as a badge-led blockquote:
 
-- **chat prompt** — Copilot Chat or IDE prompt, purple `Prompt` badge.
-- **CLI prompt** — Copilot CLI prompt, `CLI-Prompt` badge.
-- **terminal** — shell command, blue `Terminal` badge.
+- **chat prompt** — Copilot Chat, the Copilot app, or an IDE: purple `Prompt` badge, `prompt` fence.
+- **CLI prompt** — inside a Copilot CLI session, including slash commands such as `/login`: `CLI-Prompt`
+  badge, `prompt` fence.
+- **terminal** — a shell command, including the one that starts Copilot CLI: blue `Terminal` badge, `bash`
+  fence.
 - **GitHub UI** — plain numbered instruction, no badge.
 
 ## Reference guidance
@@ -101,7 +104,8 @@ tag its type. Bootstrap renders it as a badge-led blockquote:
 ## Formatting conventions
 
 - Any image added for the exercise should be stored in `.github/images` and referenced with a relative path.
-- Keep GitHub callouts left-justified (no indentation) when using `[!NOTE]`, `[!IMPORTANT]`, or `[!TIP]`.
+- Keep GitHub callouts left-justified (no indentation) when using `[!NOTE]`, `[!IMPORTANT]`, or `[!TIP]`
+  outside a list. Inside an activity's numbered list, indent a callout three spaces under its item.
 - Use this exact style:
 
 > [!NOTE]
@@ -134,6 +138,7 @@ One-line description of the exercise.
 - **Recommended repository name**: `[name]` — [one-sentence rationale]
 - **Learner copy name**: `skills-[name]`
 - **Target owner (if known)**: [account or organization, or "decide at publish"]
+- **Copyright holder**: [name for `LICENSE` and the README footer, or "decide at publish"]
 
 ## Welcome block
 
@@ -158,7 +163,7 @@ One-line description of the exercise.
 **⌨️ Activity: [Activity title]**
 
 1. [Action] — _(type: chat prompt | CLI prompt | terminal | GitHub UI)_
-1. [Action] — _(type: ...)_
+1. [Action that triggers validation] — _(type: ...)_
 
 **Troubleshooting**
 
@@ -172,7 +177,36 @@ One-line description of the exercise.
 
 ### Step 2: [Step name]
 
-[Same structure. Repeat for every step.]
+**📖 Theory: [Theory title]**
+
+[Two to five sentences of awareness-level context tied to the activities below.]
+
+**⌨️ Activity 1: [Activity title]**
+
+1. [Action] — _(type: chat prompt | CLI prompt | terminal | GitHub UI)_
+
+**Troubleshooting (Activity 1)**
+
+- [Likely mistake and recovery]
+
+**⌨️ Activity 2: [Activity title]**
+
+1. [Action] — _(type: ...)_
+1. [Action that triggers validation] — _(type: ...)_
+
+**Troubleshooting (Activity 2)**
+
+- [Likely mistake and recovery]
+
+**Transition**
+
+- Actions Trigger: [event]
+- Grading-Check: [graded? which check and what it asserts]
+- Learner artifact: [what exists after this step]
+
+### Step 3: [Step name]
+
+[Same structure as step 1 for one activity, or step 2 for several. Repeat for every step.]
 
 ## Review recap
 
@@ -187,11 +221,12 @@ Feeds `.github/steps/x-review.md`.
 | --- | --- |
 | `.github/exercise-outline.md` | Approved outline, saved verbatim by bootstrap |
 | `README.md` | |
+| `LICENSE` | MIT license; its copyright line feeds the README footer |
 | `.github/steps/1-step.md` | |
 | `.github/steps/x-review.md` | |
 | `.github/workflows/0-start-exercise.yml` | |
 | `.github/workflows/1-step.yml` | |
-| `.github/workflows/N-last-step.yml` | |
+| `.github/workflows/N-step.yml` | Final step, named `Step N # Last step of the exercise`; posts the review |
 
 ## Success criteria
 
@@ -202,9 +237,10 @@ Feeds `.github/steps/x-review.md`.
 
 - The title and repository name are approved, and the name follows the naming rules above.
 - Objectives should be observable: the learner can demonstrate them through repository activity.
-- Every step has a Theory block with real content and at least one Activity block.
+- Every step has a Theory block with real content and at least one activity, and every activity has its own
+  troubleshooting hints.
 - Steps should be small enough that validation can give targeted feedback.
 - Validation should check intent, not only file existence.
-- The file map should name real files, aligned by number, with the final workflow as `N-last-step.yml` and
-  the review content as `x-review.md`.
+- The file map should name real files, aligned by number, with every step workflow as `N-step.yml`, the final
+  one named `Step N # Last step of the exercise`, and the review content as `x-review.md`.
 - The outline should be implementable as GitHub issues, comments, workflows, and Markdown content.

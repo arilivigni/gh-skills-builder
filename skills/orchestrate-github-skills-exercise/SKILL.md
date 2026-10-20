@@ -61,7 +61,8 @@ Gate 1 passes when the user explicitly approves the outline, including its title
 moving on, confirm:
 
 - the exercise title and one repository name are approved, and the learner copy name is `skills-<name>`,
-- every step has a Theory block with real content and at least one Activity block,
+- every step has exactly one Theory block with real content and one or more Activity blocks, numbered when
+  there are several, each with its own troubleshooting tips,
 - every step has an Actions Trigger and a Grading-Check decision,
 - the file map names real files aligned by number,
 - the approved outline's storage location is recorded; bootstrap saves it to `.github/exercise-outline.md`

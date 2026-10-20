@@ -1,9 +1,13 @@
 # GitHub Skills exercise template contract
 
 This is the concrete contract implemented by [`skills/exercise-template`](https://github.com/skills/exercise-template)
-and [`skills/exercise-toolkit`](https://github.com/skills/exercise-toolkit). Treat it as the default shape for
-a new exercise. Follow an existing repository's conventions instead only when that repository intentionally
-diverges, and say so when you do.
+and [`skills/exercise-toolkit`](https://github.com/skills/exercise-toolkit), refined by the published exercises
+[`skills/idea-to-merge-with-the-copilot-app`](https://github.com/skills/idea-to-merge-with-the-copilot-app) and
+[`skills/create-applications-with-the-copilot-CLI`](https://github.com/skills/create-applications-with-the-copilot-CLI).
+Treat it as the default shape for a new exercise. Every place it differs from `exercise-template` is deliberate
+and listed under [Deliberate divergences from exercise-template](#deliberate-divergences-from-exercise-template).
+Follow an existing repository's conventions instead only when that repository intentionally diverges, and say
+so when you do.
 
 ## Canonical file set
 
@@ -19,26 +23,46 @@ LICENSE
 .github/workflows/0-start-exercise.yml
 .github/workflows/1-step.yml
 .github/workflows/2-step.yml
-.github/workflows/3-last-step.yml    # note: "-last-step", not "-step"
+.github/workflows/3-step.yml         # final step: name "Step 3 # Last step of the exercise"
 ```
 
 ## Naming invariants
 
 | Concept | Rule |
 | --- | --- |
-| Step content | `.github/steps/N-step.md` |
+| Step content | `.github/steps/N-step.md`, opening with `## Step N: <title>` |
 | Step workflow | `.github/workflows/N-step.yml` |
 | Workflow name | `name: Step N` |
-| Start workflow | `.github/workflows/0-start-exercise.yml` with `name: Step 0` |
-| Final workflow | `.github/workflows/N-last-step.yml`, still named `Step N` |
+| Start workflow | `.github/workflows/0-start-exercise.yml` with `name: Step 0 # Start Exercise` |
+| Final workflow | `.github/workflows/N-step.yml` for the highest `N`, with `name: Step N # Last step of the exercise` |
 | Review content | `.github/steps/x-review.md` (no number) |
 
 Additional invariants:
 
 - Workflow `Step N` posts the content for step `N+1`. `Step 0` posts step 1.
 - The final step workflow posts `x-review.md` and finishes the exercise. It does not enable another step.
+- Only the final step workflow carries the `# Last step of the exercise` comment. YAML treats it as a comment,
+  so the declared name is still `Step N` and `gh workflow enable "Step N"` resolves it like any other step.
+- Do not use the `N-last-step.yml` filename from `exercise-template`. Every step workflow uses `N-step.yml`.
 - Every `gh workflow enable "Step N"` must name a workflow that exists.
 - Every `STEP_N_FILE` / `REVIEW_FILE` env value must point at a file that exists.
+
+## Deliberate divergences from exercise-template
+
+`skills/exercise-template` is the starting point, not a byte-for-byte target. Where the template is silent,
+unsafe, or inconsistent with the published exercises, this contract follows the published exercises:
+
+| Area | `exercise-template` | This contract | Why |
+| --- | --- | --- | --- |
+| Final workflow | `3-last-step.yml` | `N-step.yml` named `Step N # Last step of the exercise` | one filename pattern for every step, as in the published exercises |
+| Permissions | workflow-level `permissions:` that include `actions: write` | `permissions: {}` plus per-job grants | the learner-triggered grading job must not hold `actions: write` |
+| Start trigger | `push` commented out in `0-start-exercise.yml` | `push` enabled, guarded by `is_template` | the README promises an automatic start |
+| Grading wiring | `post_next_step_content` ships `needs: [find_exercise]`, with the fix in a comment | `needs: [find_exercise, check_step_work]` whenever a grading job exists | otherwise grading never gates progress |
+| Toolkit pin | `v0.9.1` | latest published tag, default `v0.9.3` | see [exercise-toolkit version](#exercise-toolkit-version) |
+| Activities | one `### ⌨️ Activity:` per step | one unnumbered activity, or several numbered ones | see [Step and activity rules](#step-and-activity-rules) |
+| Recovery hints | one `Having trouble? 🤷` block per step | one block after each activity | hints sit next to the work they support |
+| Prompt and command blocks | none shown | badge-led blockquotes with `prompt` and `bash` fences | see [Activity block conventions](#activity-block-conventions) |
+| README footer | none | `&copy;` line with Code of Conduct and license links | matches the published exercises |
 
 ## exercise-toolkit version
 
@@ -136,10 +160,10 @@ grading job as well. Set `permissions: {}` at the workflow level and grant each 
 | --- | --- | --- | --- | --- | --- |
 | `0-start-exercise.yml` | `start_exercise` | `write` | `write` | `write` | `start-exercise.yml` commits the README and disables workflows |
 | | `post_next_step_content` | `read` | `write` | `write` | checkout, comment, enable `Step 1` |
-| `N-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
+| Intermediate `N-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
 | | `check_step_work` | `read` | **none** | `write` | reads files and posts comments; never toggles workflows |
 | | `post_next_step_content` | `read` | `write` | `write` | checkout, comment, disable self and enable next |
-| `N-last-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
+| Final `N-step.yml` | `find_exercise` | — | — | `read` | locate the exercise issue |
 | | `post_review_content` | `read` | `write` | `write` | checkout, comment, disable self |
 | | `finish_exercise` | `write` | — | `write` | `finish-exercise.yml` commits the congratulations update |
 
@@ -203,10 +227,11 @@ name: Step 0 # Start Exercise
 
 on:
   workflow_dispatch:
-  # Required for the advertised "copy the repo and wait ~20 seconds" start path.
-  # Uncomment before publishing, and make the repository a template first so the
-  # workflow does not run in the template itself. The `start_exercise` job is
-  # additionally guarded with `!github.event.repository.is_template` below.
+  # Required for the advertised "copy the repo and wait ~20 seconds" start path:
+  # a learner's copy runs this workflow on its first push. exercise-template
+  # ships this trigger commented out; exercises keep it enabled. Mark the
+  # repository as a template before publishing so the `is_template` guard on
+  # `start_exercise` stops the workflow from starting an exercise here.
   push:
     branches:
       - main
@@ -279,7 +304,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### `N-step.yml` with a grading job
+### Intermediate `N-step.yml` with a grading job
 
 ```yaml
 name: Step 2
@@ -462,7 +487,11 @@ Grading job rules:
 > comment for the author to apply, so it is easy to inherit by accident. The pre-handoff checks below
 > detect it.
 
-### `N-last-step.yml`
+### Final `N-step.yml`
+
+The final step workflow keeps the `N-step.yml` filename. Only its `name:` line marks it as the last step: the
+`# Last step of the exercise` comment is ignored by YAML, so the workflow is still `Step N` to the previous
+step's `gh workflow enable "Step N"`.
 
 ```yaml
 name: Step 3 # Last step of the exercise
@@ -582,15 +611,55 @@ If the exercise isn't ready in 20 seconds, please check the [Actions](../../acti
 - If the page shows a failed job, please submit an issue. Nice, you found a bug! 🐛
 
 </details>
+
+---
+
+&copy; (replace-me: year) (replace-me: copyright holder) &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
 ```
 
-The Copy Exercise badge URL must use the real `template_owner` and `template_name` of the published
-repository. Re-check it after any repository transfer.
+### Copy Exercise badge rules
+
+`### How to start this exercise` contains exactly one Copy Exercise badge. Copy it from
+[`skills/exercise-template`'s README](https://github.com/skills/exercise-template/blob/main/README.md) and
+change only the URL parameters:
+
+| Part | Rule |
+| --- | --- |
+| Markup | `[![](IMAGE)](LINK)` on its own line, keeping the template's empty alt text |
+| Image | `https://img.shields.io/badge/Copy%20Exercise-%E2%86%92-1f883d?style=for-the-badge&logo=github&labelColor=197935`, unchanged |
+| Link | `https://github.com/new?template_owner=OWNER&template_name=REPO&owner=%40me&name=skills-REPO&description=Exercise:+TITLE&visibility=public` |
+| `template_owner` | the account that publishes the exercise, for example `skills` |
+| `template_name` | the published repository name, spelled exactly as the repository spells it, including case |
+| `owner` | `%40me`, so the learner's own account is preselected |
+| `name` | `skills-` followed by the repository name |
+| `description` | `Exercise:+` followed by the exercise title, with words joined by `+` |
+| `visibility` | `public`, so the learner's copy does not use private Actions minutes. If the exercise itself is published as a private repository, publish switches this to `private`, so learners' copies do not expose its content |
+
+Do not restyle the badge, add a second copy button, or keep the template's
+`<!-- (replace-me: Make sure to edit the URL ...) -->` reminder comment. The placeholder scan in
+[Pre-handoff checks](#pre-handoff-checks) fails while that comment or any `OWNER`, `REPO`, or `TITLE` token
+remains.
+
+The badge must use the real `template_owner` and `template_name` of the published repository. Re-check it
+after any repository transfer.
 
 `template_name` is the repository name approved in the outline's Exercise identity section, `name` is
 `skills-` followed by that name, and `description` carries the approved title. Keep these aligned with
 `.github/exercise-outline.md`; if the name changes at publish time, update the badge and the saved outline
 together.
+
+### README footer
+
+End the README with a `---` rule and one footer line, as the published exercises do:
+
+- `&copy;`, then the year and copyright holder from the repository's `LICENSE` copyright line. If that line
+  has no year, use the year the exercise is first published.
+- A [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md)
+  link.
+- A link that names the repository's actual license. Exercises ship the MIT license, linked as
+  `[MIT License](https://gh.io/mit)`.
+- `&bull;` between the parts. Exercise-specific credits, such as font attributions, can follow as extra
+  `&bull;` parts.
 
 ## Template slots
 
@@ -601,10 +670,49 @@ A bare descriptive phrase such as `Exercise title` or `First instruction` reads 
 skeleton copied verbatim would sail past the no-placeholder gate and ship unusable learner content. One
 sentinel keeps a single token sufficient to catch every unfilled slot.
 
+## Step and activity rules
+
+Every `N-step.md` uses the same anatomy, in this order, so learners meet the same rhythm in every step of
+every exercise:
+
+1. `## Step N: <title>`, where `N` matches the filename number.
+1. Optionally, a short story, scenario, or image that sets up the step.
+1. Exactly one `### 📖 Theory: <title>` section with real content. Put supporting detail in `####`
+   subsections under it, for example `#### References`, instead of adding more `###` sections.
+1. One or more activities. Each is a `###` activity heading followed by numbered instructions.
+1. A `Having trouble? 🤷` block directly after **each** activity, with hints for that activity only.
+
+Activity headings:
+
+| Activities in the step | Headings |
+| --- | --- |
+| One | `### ⌨️ Activity: <title>` |
+| Two or more | `### ⌨️ Activity 1: <title>`, `### ⌨️ Activity 2: <title>`, and so on, numbered from 1 with no gaps |
+
+- Never mix the two forms in one step, and never number a lone activity.
+- Always use the ⌨️ emoji. Do not use the `:keyboard:` shortcode.
+- Start a new activity when the learner switches tools or produces a separate result, for example prompting
+  Copilot and then reviewing what it produced. Keep each activity a short sequence the learner can finish.
+- Other `<details>` blocks, such as a stretch goal, can follow an activity's `Having trouble? 🤷` block. They
+  never replace it.
+
+Instructions:
+
+- Number every list item `1.`. GitHub renders the sequence, so adding or removing an item never breaks it.
+- Indent everything that belongs to an item by three spaces: extra paragraphs, images, callouts, code blocks,
+  and badge-led blockquotes. A callout or blockquote at column 0 ends the list, and the next item restarts
+  at 1.
+- End the step's final activity with the action that triggers validation, such as committing a file or merging
+  a pull request, followed by this instruction:
+
+  ```text
+  1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson.
+  ```
+
 ## Step skeleton (`N-step.md`)
 
-Every step file must contain exactly one `### 📖 Theory:` heading with real content and at least one
-`### ⌨️ Activity:` heading with numbered instructions.
+Use this skeleton for a step with one activity. Every step file must contain exactly one `### 📖 Theory:`
+heading with real content and at least one activity heading with numbered instructions.
 
 ```markdown
 ## Step 1: (replace-me: Step name)
@@ -622,11 +730,15 @@ Every step file must contain exactly one `### 📖 Theory:` heading with real co
 
 1. (replace-me: First instruction)
 
-   Indent any multiline instruction content so the ordered list keeps numbering.
+   (replace-me: Optional detail for this instruction, indented three spaces so the list keeps numbering)
 
 1. (replace-me: Second instruction)
 
 1. (replace-me: Additional instructions as needed)
+
+1. (replace-me: Action that triggers validation, such as committing the file)
+
+1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson.
 
 <details>
 <summary>Having trouble? 🤷</summary><br/>
@@ -637,22 +749,93 @@ Every step file must contain exactly one `### 📖 Theory:` heading with real co
 </details>
 ```
 
+### Step with several activities
+
+Number every activity and give each its own `Having trouble? 🤷` block. Only the final activity ends with the
+validation trigger and the Mona instruction.
+
+```markdown
+## Step 2: (replace-me: Step name)
+
+(replace-me: Brief story or scenario to introduce the step)
+
+### 📖 Theory: (replace-me: Theory title)
+
+(replace-me: Awareness-level background that directly supports the activities below. Two to five sentences.)
+
+#### References
+
+- (replace-me: Documentation link to learn more about the feature)
+
+### ⌨️ Activity 1: (replace-me: Activity title)
+
+1. (replace-me: First instruction)
+
+   > ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)
+   >
+   > ```prompt
+   > (replace-me: Prompt the learner sends to Copilot)
+   > ```
+
+1. (replace-me: Second instruction)
+
+<details>
+<summary>Having trouble? 🤷</summary><br/>
+
+- (replace-me: Troubleshooting tip or hint)
+
+</details>
+
+### ⌨️ Activity 2: (replace-me: Activity title)
+
+1. (replace-me: First instruction)
+
+   > ![Static Badge](https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff)
+   >
+   > ```bash
+   > (replace-me: Command the learner runs)
+   > ```
+
+1. (replace-me: Action that triggers validation, such as committing the file)
+
+1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson.
+
+<details>
+<summary>Having trouble? 🤷</summary><br/>
+
+- (replace-me: Troubleshooting tip or hint)
+
+</details>
+```
+
 ## Activity block conventions
 
-Inside an `⌨️ Activity`, every Copilot prompt and every terminal command uses a badge-led blockquote. The
-badge line comes first, then a bare `>` line, then the fenced block inside the same blockquote. Indent the
-whole blockquote to align under its numbered list item.
+Inside an activity, every Copilot prompt and every terminal command uses a badge-led blockquote:
+
+- The badge line comes first, then a bare `>` line, then the fenced block, all inside one blockquote. Never
+  leave a blank line inside it: a blank line ends the blockquote and separates the badge from its block.
+- Indent the whole blockquote three spaces so it sits under its numbered list item.
+- Put exactly what the learner should send or run inside the fence. Explanations go in the list item, not
+  in the fence.
+
+Choose the badge by where the learner types the text:
+
+| The learner types it into | Badge | Fence language |
+| --- | --- | --- |
+| Copilot Chat, the Copilot app, or an IDE | Prompt | `prompt` |
+| A Copilot CLI session, including slash commands such as `/login` | CLI Prompt | `prompt` |
+| A shell, including the command that starts a Copilot CLI session | Terminal | `bash` |
 
 Use the badge URLs verbatim. Do not restyle, recolor, or rename them. Keep the alt text `Static Badge`.
 
-### Copilot Chat / IDE prompt
+### Copilot Chat, app, or IDE prompt
 
 ```markdown
 1. Ask Copilot Chat to summarize the change.
 
    > ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)
    >
-   > ```text
+   > ```prompt
    > Summarize the changes in this pull request.
    > ```
 ```
@@ -664,7 +847,7 @@ Use the badge URLs verbatim. Do not restyle, recolor, or rename them. Keep the a
 
    > ![Static Badge](https://img.shields.io/badge/CLI-Prompt-text?style=flat-square&logo=github-copilot&labelColor=8250df&color=fbefff)
    >
-   > ```text
+   > ```prompt
    > Explain what this workflow does.
    > ```
 ```
@@ -680,6 +863,26 @@ Use the badge URLs verbatim. Do not restyle, recolor, or rename them. Keep the a
    > gh repo view
    > ```
 ```
+
+## Template variables in step content
+
+`GrantBirki/comment` renders a step file as a Nunjucks template **only** when the workflow step that posts it
+passes `vars:`. That changes how double braces behave:
+
+| Posting step | `{{ name }}` in the step file | Literal `{{ }}` or `{% %}` text, such as a `${{ secrets.TOKEN }}` snippet |
+| --- | --- | --- |
+| passes `vars:` | replaced by the value, or by nothing when `name` was not passed | read as template syntax, so it is mangled unless wrapped in `{% raw %}` and `{% endraw %}` |
+| no `vars:` | shown literally, braces included | shown as written |
+
+Rules:
+
+- `0-start-exercise.yml` posts step 1 with `login` and `full_repo_name`, so step 1 can use `{{ login }}` and
+  `{{ full_repo_name }}`.
+- The step workflow skeletons post later steps without `vars:`. A step that uses a variable needs a matching
+  `vars:` entry on the `Create comment - add step content` step of the workflow that posts it.
+- Add `vars:` only where a step uses a variable.
+- In every step file posted with `vars:`, wrap literal `${{ ... }}` expressions, such as workflow snippets, in
+  `{% raw %}` and `{% endraw %}`.
 
 ## Review skeleton (`x-review.md`)
 
@@ -702,13 +905,17 @@ Here's a recap of your accomplishments:
 - (replace-me: Other resources or calls to action)
 ```
 
+The published exercises add a section, such as `### What you practiced`, between the recap and
+`### What's next?`. Add one when it helps, and keep `### What's next?` last.
+
 ## Images and callouts
 
 - Store exercise images in `.github/images/` and reference them relatively from step files, for example
   `<img width="200" alt="descriptive alt text" src="../images/inspectocat.png" />`.
 - Always provide meaningful alt text.
 - Keep `[!NOTE]`, `[!IMPORTANT]`, `[!TIP]`, `[!WARNING]`, and `[!CAUTION]` callouts left-justified when they
-  are not nested inside a list item.
+  are not part of a list. Inside an activity's numbered list, indent a callout three spaces under its item,
+  because a left-justified callout ends the list.
 
 ## Pre-handoff checks
 
@@ -750,11 +957,11 @@ Run these before reporting the bootstrap complete:
 > print("no placeholders")
 > PY
 >
-> # Structural audit: required files exist, at least one step exists, step files
-> # and step workflows line up by number, each workflow's declared name matches
-> # its filename number, the last step is an N-last-step.yml that posts the
-> # review, referenced content files exist, enable targets exist, and grading
-> # jobs are wired into needs in both directions.
+> # Structural audit: required files exist, step files and step workflows line
+> # up by number, every step workflow is N-step.yml declaring `name: Step N`,
+> # only the final one is marked `# Last step of the exercise` and posts the
+> # review, referenced content files and enable targets exist, grading jobs are
+> # wired into needs, and permissions are granted per job.
 > python3 - <<'PY'
 > import re, sys, yaml
 > from pathlib import Path
@@ -762,6 +969,8 @@ Run these before reporting the bootstrap complete:
 > problems = []
 > steps = Path(".github/steps")
 > flows = Path(".github/workflows")
+> # `# Last step of the exercise` is a YAML comment, so read it from the raw text.
+> LAST = re.compile(r"""^name:\s*["']?Step (\d+)["']?\s+#\s*Last step of the exercise\s*$""", re.MULTILINE)
 >
 > for required in (Path("README.md"), steps / "x-review.md", flows / "0-start-exercise.yml"):
 >     if not required.exists():
@@ -772,7 +981,7 @@ Run these before reporting the bootstrap complete:
 > if not step_numbers:
 >     problems.append("no numbered step files found in .github/steps")
 >
-> workflow_numbers, names, last_steps, enables = {}, {}, [], []
+> workflow_numbers, names, marked, enables = {}, {}, [], []
 >
 > for path in sorted(flows.glob("*.yml")):
 >     text = path.read_text(encoding="utf-8")
@@ -785,18 +994,22 @@ Run these before reporting the bootstrap complete:
 >         if declared in names:
 >             problems.append(f"{path}: declares name {declared!r}, already declared by {names[declared]}")
 >         names[declared] = path
+>     if LAST.search(text):
+>         marked.append(path)
 >
 >     number = re.match(r"(\d+)-", path.name)
 >     if number:
 >         value = int(number.group(1))
 >         if declared != f"Step {value}":
 >             problems.append(f"{path}: declares name {declared!r}, expected 'Step {value}'")
+>         if value == 0 and path.name != "0-start-exercise.yml":
+>             problems.append(f"{path}: the start workflow must be 0-start-exercise.yml")
 >         if value > 0:
+>             if path.name != f"{value}-step.yml":
+>                 problems.append(f"{path}: rename to {value}-step.yml; every step workflow, including the last, is N-step.yml")
 >             if value in workflow_numbers:
 >                 problems.append(f"{path}: duplicates step number {value} with {workflow_numbers[value]}")
 >             workflow_numbers[value] = path
->     if re.fullmatch(r"\d+-last-step\.yml", path.name):
->         last_steps.append(path)
 >
 >     # A referenced file that merely exists is not enough: STEP_N_FILE must be
 >     # step N's own content, and REVIEW_FILE must be the review page.
@@ -855,21 +1068,22 @@ Run these before reporting the bootstrap complete:
 > if missing_step:
 >     problems.append(f"step workflows with no matching step file: {sorted(missing_step)}")
 >
-> if len(last_steps) != 1:
->     problems.append(f"expected exactly one N-last-step.yml, found {[str(p) for p in last_steps]}")
-> elif step_numbers:
->     final = max(step_numbers)
->     if not re.fullmatch(rf"{final}-last-step\.yml", last_steps[0].name):
->         problems.append(f"last step should be {final}-last-step.yml, found {last_steps[0].name}")
->     text = last_steps[0].read_text(encoding="utf-8")
+> final = workflow_numbers.get(max(step_numbers)) if step_numbers else None
+> if final is not None:
+>     text = final.read_text(encoding="utf-8")
+>     if final not in marked:
+>         problems.append(f"{final}: the final workflow must be 'name: Step {max(step_numbers)} # Last step of the exercise'")
 >     if "REVIEW_FILE" not in text:
->         problems.append(f"{last_steps[0]}: final workflow does not reference REVIEW_FILE")
+>         problems.append(f"{final}: final workflow does not reference REVIEW_FILE")
 >     if re.search(r'gh workflow enable\s+"', text):
->         problems.append(f"{last_steps[0]}: final workflow should not enable another step")
+>         problems.append(f"{final}: final workflow should not enable another step")
+> for path in marked:
+>     if path != final:
+>         problems.append(f"{path}: only the final step workflow is marked '# Last step of the exercise'")
 >
 > if problems:
 >     sys.exit("\n".join(problems))
-> print(f"structure OK: steps {sorted(step_numbers)}, workflows {sorted(workflow_numbers)}, last {last_steps[0].name}")
+> print(f"structure OK: steps {sorted(step_numbers)}, workflows {sorted(workflow_numbers)}, final {final.name}")
 > PY
 >
 > # Every toolkit reference is the same release tag.
@@ -920,52 +1134,250 @@ Run these before reporting the bootstrap complete:
 > # has no git tag, so every `uses:` pinned to it fails to resolve.
 > gh api "repos/skills/exercise-toolkit/git/ref/tags/$TOOLKIT_REF" --jq .ref
 >
-> # Every step file has exactly one non-empty Theory block and at least one
-> # Activity block containing numbered instructions. Counting headings is not
-> # enough: an empty Theory section or an Activity with no steps must fail.
+> # Step anatomy: `## Step N:` comes first, then exactly one non-empty Theory and
+> # either one `### ⌨️ Activity:` or `### ⌨️ Activity 1:`, `2:`, and so on. Each
+> # activity has `1.` instructions and its own Having trouble block, the final
+> # activity ends with the Mona line, no column-0 line splits a list, and every
+> # badge sits in one blockquote with `>` and the fence language it requires.
 > python3 - <<'PY'
 > import re, sys
 > from pathlib import Path
 >
-> THEORY = "### 📖 Theory:"
-> ACTIVITY = "### ⌨️ Activity:"
+> ACTIVITY = re.compile(r"### (⌨️|⌨|:keyboard:) Activity( \d+)?:(.*)")
+> TROUBLE = "<summary>Having trouble? 🤷</summary>"
+> MONA = "Wait a moment for Mona to check your work, provide feedback, and share the next lesson."
+> FENCE = "`" * 3
+> # Canonical badge, then the fence language its blockquote must use.
+> CANONICAL = """
+> https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple prompt
+> https://img.shields.io/badge/CLI-Prompt-text?style=flat-square&logo=github-copilot&labelColor=8250df&color=fbefff prompt
+> https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff bash
+> """
+> BADGES = dict(line.split() for line in CANONICAL.strip().splitlines())
 > problems = []
 >
-> def sections(text, marker):
->     """Body text following each occurrence of marker, up to the next heading."""
->     bodies = []
->     for match in re.finditer(re.escape(marker) + r"[^\n]*\n", text):
->         rest = text[match.end():]
->         end = re.search(r"^#{1,3} ", rest, re.MULTILINE)
->         bodies.append(rest[: end.start()] if end else rest)
->     return bodies
+> def visible(lines):
+>     """Blank fenced code, so a `# comment` inside a fence is not read as a
+>     heading. Keep each opening fence, because one at column 0 ends a list."""
+>     out, fence = [], None
+>     for line in lines:
+>         bare = re.sub(r"^[ \t>]*", "", line)
+>         if fence is None:
+>             opener = re.match(r"`{3,}|~{3,}", bare)
+>             if opener:
+>                 fence = opener.group(0)
+>                 line = line[: len(line) - len(bare)] + fence
+>             out.append(line)
+>         else:
+>             if re.fullmatch(re.escape(fence[0]) + "{%d,}\\s*" % len(fence), bare):
+>                 fence = None
+>             out.append("")
+>     return out
 >
-> def meaningful(body):
->     """Strip HTML comments, standalone images and blank lines."""
->     body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
->     body = re.sub(r"^\s*<img[^>]*>\s*$", "", body, flags=re.MULTILINE)
->     return [line for line in (l.strip() for l in body.splitlines()) if line]
+> def ends_list(line, previous):
+>     """A column-0 line ends a numbered list unless it lazily continues a paragraph."""
+>     if not line.strip() or line[0] in " \t" or re.match(r"\d+\.\s", line):
+>         return False
+>     return not previous.strip() or re.match(r"[>#`~]|[-*+]\s", line) is not None
 >
 > for path in sorted(Path(".github/steps").glob("*-step.md")):
->     text = path.read_text(encoding="utf-8")
+>     number = int(path.name.split("-")[0])
+>     raw = path.read_text(encoding="utf-8").splitlines()
+>     lines = visible(raw)
+>     heads = [i for i, line in enumerate(lines) if re.match(r"#{1,3} ", line)]
 >
->     theory_bodies = sections(text, THEORY)
->     if len(theory_bodies) != 1:
->         problems.append(f"{path}: expected exactly 1 Theory block, found {len(theory_bodies)}")
->     elif not meaningful(theory_bodies[0]):
+>     def body(start):
+>         end = next((h for h in heads if h > start), len(lines))
+>         return lines[start + 1 : end]
+>
+>     if not heads or not re.match(rf"## Step {number}: \S", lines[heads[0]]):
+>         problems.append(f"{path}: the first heading must be '## Step {number}: <title>'")
+>
+>     theory = [i for i in heads if lines[i].startswith("### 📖 Theory:")]
+>     activities = [(i, m) for i in heads if (m := ACTIVITY.fullmatch(lines[i].rstrip()))]
+>     sections = set(theory) | {i for i, _ in activities}
+>     for i in heads:
+>         if lines[i].startswith("### ") and i not in sections:
+>             problems.append(f"{path}:{i + 1}: '{lines[i]}' is neither Theory nor an Activity; make it a '####' subsection")
+>
+>     if len(theory) != 1:
+>         problems.append(f"{path}: expected exactly 1 Theory block, found {len(theory)}")
+>     elif not [l for l in body(theory[0]) if l.strip() and not re.fullmatch(r"\s*(<img[^>]*>|<!--.*-->)\s*", l)]:
 >         problems.append(f"{path}: Theory block has no content")
 >
->     activity_bodies = sections(text, ACTIVITY)
->     if not activity_bodies:
+>     numbers = [m.group(2) for _, m in activities]
+>     if not activities:
 >         problems.append(f"{path}: no Activity block")
->     else:
->         for index, body in enumerate(activity_bodies, 1):
->             if not re.search(r"^\s*\d+\.\s+\S", body, re.MULTILINE):
->                 problems.append(f"{path}: Activity block {index} has no numbered instructions")
+>     elif len(activities) == 1 and numbers[0]:
+>         problems.append(f"{path}: a single activity is '### ⌨️ Activity: <title>', without a number")
+>     elif len(activities) > 1 and [n and int(n) for n in numbers] != list(range(1, len(activities) + 1)):
+>         problems.append(f"{path}: number every activity in order, '### ⌨️ Activity 1:' to 'Activity {len(activities)}:'")
+>
+>     for i, match in activities:
+>         chunk = body(i)
+>         where = f"{path}:{i + 1}"
+>         if match.group(1) != "⌨️":
+>             problems.append(f"{where}: use the ⌨️ emoji, not {match.group(1)!r}")
+>         if not match.group(3).strip():
+>             problems.append(f"{where}: activity has no title")
+>         items = [(n, re.match(r"(\s*)(\d+)\.\s+\S", l)) for n, l in enumerate(chunk)]
+>         items = [(n, m) for n, m in items if m]
+>         if not items:
+>             problems.append(f"{where}: activity has no numbered instructions")
+>         for n, m in items:
+>             if m.group(2) != "1":
+>                 problems.append(f"{path}:{i + n + 2}: number every list item '1.', found '{m.group(2)}.'")
+>         top = [n for n, m in items if not m.group(1)]
+>         for a, b in zip(top, top[1:]):
+>             n = next((n for n in range(a + 1, b) if ends_list(chunk[n], chunk[n - 1])), None)
+>             if n is not None:
+>                 problems.append(f"{path}:{i + n + 2}: this column-0 line ends the numbered list; indent it three spaces")
+>         if TROUBLE not in "\n".join(chunk):
+>             problems.append(f"{where}: activity is not followed by its own 'Having trouble? 🤷' block")
+>     if activities and MONA not in "\n".join(body(activities[-1][0])):
+>         problems.append(f"{path}: the final activity does not end with '{MONA}'")
+>
+>     for n, line in enumerate(raw):
+>         found = re.search(r"!\[([^\]]*)\]\((https://img\.shields\.io/badge/[^)\s]+)\)", line)
+>         if not found:
+>             continue
+>         alt, url = found.groups()
+>         if url not in BADGES:
+>             problems.append(f"{path}:{n + 1}: non-canonical badge {url}")
+>             continue
+>         fence = FENCE + BADGES[url]
+>         follow = raw[n + 1 : n + 3]
+>         if not (alt == "Static Badge" and re.match(r"\s*> !\[", line) and len(follow) == 2
+>                 and re.fullmatch(r"\s*>\s*", follow[0]) and follow[1].strip() == "> " + fence):
+>             problems.append(f"{path}:{n + 1}: write '> ![Static Badge](...)', then '>', then '> {fence}' in one blockquote")
 >
 > if problems:
 >     sys.exit("\n".join(problems))
 > print("step content OK")
+> PY
+>
+> # Template variables: a step file posted without `vars:` cannot use
+> # `{{ name }}`, and one posted with `vars:` may use only the names passed and
+> # must wrap literal `${{ }}` expressions in raw tags.
+> python3 - <<'PY'
+> import re, sys, yaml
+> from pathlib import Path
+>
+> # GrantBirki/comment renders a file with Nunjucks only when the step passes
+> # `vars:`. Without vars, {{ name }} reaches the learner as literal braces.
+> # With vars, an unknown name renders empty and ${{ ... }} loses its body.
+> problems = []
+> posts = {}
+>
+> for path in sorted(Path(".github/workflows").glob("*.yml")):
+>     document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+>     for job in (document.get("jobs") or {}).values():
+>         env = {**(document.get("env") or {}), **((job or {}).get("env") or {})}
+>         for step in (job or {}).get("steps") or []:
+>             if not str(step.get("uses", "")).startswith("GrantBirki/comment"):
+>                 continue
+>             options = step.get("with") or {}
+>             target = re.sub(r"\$\{\{\s*env\.(\w+)\s*\}\}",
+>                             lambda m: str(env.get(m.group(1), m.group(0))), str(options.get("file", "")))
+>             if not target.startswith(".github/steps/"):
+>                 continue
+>             given = options.get("vars")
+>             if isinstance(given, str):
+>                 given = yaml.safe_load(given)
+>             names = set(given) if isinstance(given, dict) else None
+>             posts.setdefault(target, []).append((path, names))
+>
+> RAW = re.compile(r"\{%-?\s*raw\s*-?%\}.*?\{%-?\s*endraw\s*-?%\}", re.DOTALL)
+> TAG = re.compile(r"\{%.*?%\}")
+> VARIABLE = re.compile(r"(?<!\$)\{\{-?\s*([A-Za-z_]\w*)[^}]*\}\}")
+> EXPRESSION = re.compile(r"\$\{\{.*?\}\}")
+>
+> for target, sources in sorted(posts.items()):
+>     if not Path(target).exists():
+>         continue
+>     text = Path(target).read_text(encoding="utf-8")
+>     for workflow, names in sources:
+>         where = f"{target} (posted by {workflow})"
+>         if names is None:
+>             for match in VARIABLE.finditer(text):
+>                 problems.append(f"{where}: '{match.group(0)}' shows literally; pass '{match.group(1)}' in the step's vars")
+>             for match in TAG.finditer(text):
+>                 problems.append(f"{where}: '{match.group(0)}' shows literally because the step passes no vars")
+>             continue
+>         rendered = RAW.sub("", text)
+>         if "{#" in rendered:
+>             problems.append(f"{where}: '{{#' starts a Nunjucks comment and hides text; wrap it in raw tags")
+>         for match in EXPRESSION.finditer(rendered):
+>             problems.append(f"{where}: wrap '{match.group(0)}' in raw tags; Nunjucks renders it as '$'")
+>         for match in VARIABLE.finditer(rendered):
+>             if match.group(1) not in names:
+>                 problems.append(f"{where}: '{match.group(0)}' renders empty; vars pass only {sorted(names)}")
+>
+> if problems:
+>     sys.exit("\n".join(problems))
+> print(f"template variables OK in {len(posts)} posted files")
+> PY
+>
+> # README: one canonical Copy Exercise button under `### How to start this
+> # exercise` that opens github.com/new with owner=%40me, name=skills-<repo>,
+> # description=Exercise:+Title, and visibility=public (private only for a
+> # privately published exercise), then a `---` rule and the `&copy;` footer,
+> # which carries the LICENSE year when LICENSE has one.
+> python3 - <<'PY'
+> import re, sys
+> from pathlib import Path
+> from urllib.parse import parse_qs, urlsplit
+>
+> IMAGE = "https://img.shields.io/badge/Copy%20Exercise-%E2%86%92-1f883d?style=for-the-badge&logo=github&labelColor=197935"
+> CONDUCT = "https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md"
+> problems = []
+> lines = Path("README.md").read_text(encoding="utf-8").splitlines()
+>
+> start = next((i for i, line in enumerate(lines) if line.strip() == "### How to start this exercise"), None)
+> end = next((i for i in range(start + 1, len(lines)) if re.match(r"#{1,3} ", lines[i])), len(lines)) if start is not None else 0
+> if start is None:
+>     problems.append("README.md: missing '### How to start this exercise'")
+>
+> buttons = [(i, *m.groups()) for i, line in enumerate(lines)
+>            for m in re.finditer(r"\[!\[[^\]]*\]\(([^)\s]*Copy%20Exercise[^)\s]*)\)\]\(([^)\s]+)\)", line)]
+> if len(buttons) != 1:
+>     problems.append(f"README.md: expected exactly one Copy Exercise button, found {len(buttons)}")
+> for i, image, link in buttons:
+>     where = f"README.md:{i + 1}"
+>     if start is None or not start < i < end:
+>         problems.append(f"{where}: put the Copy Exercise button under '### How to start this exercise'")
+>     if image != IMAGE:
+>         problems.append(f"{where}: use the canonical Copy Exercise image {IMAGE}")
+>     parts = urlsplit(link)
+>     query = {key: values[0] for key, values in parse_qs(parts.query).items()}
+>     if f"{parts.scheme}://{parts.netloc}{parts.path}" != "https://github.com/new":
+>         problems.append(f"{where}: the button must link to https://github.com/new")
+>     if query.get("owner") != "@me":
+>         problems.append(f"{where}: keep owner=%40me so the learner's own account is preselected")
+>     if query.get("visibility") not in {"public", "private"}:
+>         problems.append(f"{where}: set visibility=public, or visibility=private for a privately published exercise")
+>     if not query.get("template_owner") or not query.get("template_name"):
+>         problems.append(f"{where}: set template_owner and template_name")
+>     elif query.get("name", "").lower() != "skills-" + query["template_name"].lower():
+>         problems.append(f"{where}: name must be skills-{query['template_name']}")
+>     if not re.search(r"(?:^|&)description=Exercise:\+[^&]", parts.query) or "%20" in parts.query:
+>         problems.append(f"{where}: description must read 'Exercise:+Title+Words', with + between words")
+>
+> content = [line.strip() for line in lines if line.strip()]
+> footer = content[-1] if content else ""
+> if not footer.startswith("&copy;") or CONDUCT not in footer or "&bull;" not in footer:
+>     problems.append("README.md: end with the footer '&copy; <year> <holder> &bull; [Code of Conduct](...) &bull; [license](...)'")
+> elif len(content) < 2 or content[-2] != "---":
+>     problems.append("README.md: put a '---' line before the footer")
+> else:
+>     license_text = Path("LICENSE").read_text(encoding="utf-8") if Path("LICENSE").exists() else ""
+>     year = re.search(r"Copyright \(c\)\s+(\d{4})", license_text)
+>     if year and year.group(1) not in footer:
+>         problems.append(f"README.md: the footer year should match LICENSE ({year.group(1)})")
+>
+> if problems:
+>     sys.exit("\n".join(problems))
+> print("README OK")
 > PY
 >
 > # Workflows parse
