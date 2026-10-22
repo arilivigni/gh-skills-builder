@@ -29,6 +29,17 @@ CANONICAL_BADGES = {
     "terminal": "https://img.shields.io/badge/Terminal-text?logo=gnometerminal&labelColor=0969da&color=ddf4ff",
 }
 
+# Each badge introduces a blockquote whose fence language is fixed.
+BADGE_FENCES = {
+    CANONICAL_BADGES["chat-prompt"]: "prompt",
+    CANONICAL_BADGES["cli-prompt"]: "prompt",
+    CANONICAL_BADGES["terminal"]: "bash",
+}
+
+COPY_EXERCISE_IMAGE = "https://img.shields.io/badge/Copy%20Exercise-%E2%86%92-1f883d?style=for-the-badge&logo=github&labelColor=197935"
+
+MONA_LINE = "1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson."
+
 CONTRACT = Path("skills/bootstrap-github-skills-exercise/references/exercise-template-contract.md")
 
 failures: list[str] = []
@@ -287,62 +298,141 @@ def check_toolkit_refs() -> str | None:
     return next(iter(tags)) if tags else None
 
 
+def _markdown_block(text: str, heading: str) -> str | None:
+    """Return the first ```markdown block that follows `heading`."""
+    match = re.search(re.escape(heading) + r".*?^```markdown\n(.*?)^```$", text, flags=re.DOTALL | re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def _check_step_skeleton(name: str, skeleton: str, numbered: bool) -> None:
+    """A step skeleton must obey the step anatomy the contract imposes: one
+    Theory with content, then either one unnumbered activity or activities
+    numbered from 1, each with lazy `1.` instructions and its own recovery
+    block, and only the final activity ending with the Mona instruction."""
+    if skeleton.count("### 📖 Theory:") != 1:
+        fail("contract", f"{name} must contain exactly one '### 📖 Theory:' heading")
+
+    theory = re.search(r"### 📖 Theory:[^\n]*\n(.*?)(?=^#{1,3} )", skeleton, flags=re.DOTALL | re.MULTILINE)
+    if theory is None or not [line for line in theory.group(1).splitlines() if line.strip()]:
+        fail("contract", f"{name}'s Theory block has no content")
+
+    parts = re.split(r"^(### ⌨️ Activity[^\n]*)\n", skeleton, flags=re.MULTILINE)
+    activities = list(zip(parts[1::2], parts[2::2]))
+    if numbered:
+        expected = [f"### ⌨️ Activity {index}:" for index in range(1, len(activities) + 1)]
+        if len(activities) < 2 or any(not heading.startswith(want) for (heading, _), want in zip(activities, expected)):
+            fail("contract", f"{name} must number two or more activities from '### ⌨️ Activity 1:' with no gaps")
+    elif len(activities) != 1 or not activities[0][0].startswith("### ⌨️ Activity:"):
+        fail("contract", f"{name} must contain exactly one '### ⌨️ Activity:' heading")
+
+    for index, (heading, body) in enumerate(activities, 1):
+        if not re.search(r"^1\.\s+\S", body, flags=re.MULTILINE):
+            fail("contract", f"{name}: '{heading}' has no numbered instructions")
+        if re.search(r"^(?:[2-9]|\d{2,})\.\s", body, flags=re.MULTILINE):
+            fail("contract", f"{name}: '{heading}' must number every instruction '1.'")
+        if "<summary>Having trouble? 🤷</summary>" not in body:
+            fail("contract", f"{name}: '{heading}' has no 'Having trouble? 🤷' block")
+        last = index == len(activities)
+        if last and MONA_LINE not in body:
+            fail("contract", f"{name}: the final activity must end with '{MONA_LINE}'")
+        if not last and MONA_LINE in body:
+            fail("contract", f"{name}: only the final activity ends with the Mona instruction")
+
+
 def check_contract_self_consistency() -> None:
-    """The contract imposes a Theory + Activity rule. Its own step skeleton must
-    satisfy that rule, or the plugin contradicts itself."""
+    """The contract imposes step, README, and workflow rules. Its own skeletons
+    must satisfy those rules, or the plugin contradicts itself."""
     path = ROOT / CONTRACT
     if not path.exists():
         fail("contract", f"{CONTRACT} is missing")
         return
 
     text = read(path)
-    match = re.search(r"## Step skeleton.*?^```markdown\n(.*?)^```$", text, flags=re.DOTALL | re.MULTILINE)
-    if not match:
+    single = _markdown_block(text, "## Step skeleton")
+    if single is None:
         fail("contract", "step skeleton block not found in the contract reference")
-        return
+    else:
+        _check_step_skeleton("step skeleton", single, numbered=False)
 
-    skeleton = match.group(1)
-    if skeleton.count("### 📖 Theory:") != 1:
-        fail("contract", "step skeleton must contain exactly one '### 📖 Theory:' heading")
-    if "### ⌨️ Activity:" not in skeleton:
-        fail("contract", "step skeleton must contain a '### ⌨️ Activity:' heading")
-    if "Having trouble" not in skeleton:
-        fail("contract", "step skeleton must contain a 'Having trouble' recovery block")
+    several = _markdown_block(text, "### Step with several activities")
+    if several is None:
+        fail("contract", "multi-activity step skeleton block not found in the contract reference")
+    else:
+        _check_step_skeleton("multi-activity step skeleton", several, numbered=True)
 
-    # The skeleton must satisfy the rule it teaches: a Theory heading with real
-    # content beneath it, and an Activity with numbered instructions.
-    theory = re.search(r"### 📖 Theory:[^\n]*\n(.*?)(?=^#{1,3} )", skeleton, flags=re.DOTALL | re.MULTILINE)
-    if theory is None or not [line for line in theory.group(1).splitlines() if line.strip()]:
-        fail("contract", "step skeleton's Theory block has no content")
+    readme = _markdown_block(text, "## README skeleton")
+    if readme is None:
+        fail("contract", "README skeleton block not found in the contract reference")
+    else:
+        start = readme.find("### How to start this exercise")
+        if readme.count(COPY_EXERCISE_IMAGE) != 1 or start < 0 or readme.find(COPY_EXERCISE_IMAGE) < start:
+            fail("contract", "README skeleton must have exactly one canonical Copy Exercise badge under '### How to start this exercise'")
+        lines = [line.strip() for line in readme.splitlines() if line.strip()]
+        if len(lines) < 2 or lines[-2] != "---" or not lines[-1].startswith("&copy;"):
+            fail("contract", "README skeleton must end with a '---' rule and the '&copy;' footer")
 
-    activity = re.search(r"### ⌨️ Activity:[^\n]*\n(.*?)(?=^#{1,3} |\Z)", skeleton, flags=re.DOTALL | re.MULTILINE)
-    if activity is None or not re.search(r"^\s*\d+\.\s+\S", activity.group(1), flags=re.MULTILINE):
-        fail("contract", "step skeleton's Activity block has no numbered instructions")
+    final = re.search(r"^### Final `N-step\.yml`\n.*?^```yaml\n(.*?)^```$", text, flags=re.DOTALL | re.MULTILINE)
+    if final is None or not re.search(r"^name: Step \d+ # Last step of the exercise$", final.group(1), flags=re.MULTILINE):
+        fail("contract", "final N-step.yml skeleton must declare 'name: Step N # Last step of the exercise'")
 
-    for section in ("## Activity block conventions", "## Workflow chaining rules", "## Permissions matrix"):
+    for section in (
+        "## Step and activity rules",
+        "## Activity block conventions",
+        "## Template variables in step content",
+        "### Copy Exercise badge rules",
+        "### README footer",
+        "## Workflow chaining rules",
+        "## Permissions matrix",
+        "## Pre-handoff checks",
+    ):
         if section not in text:
             fail("contract", f"contract reference is missing section '{section}'")
 
 
 def check_badges() -> None:
     """Badge drift means exercises stop looking consistent, which is the whole
-    point of standardizing them."""
+    point of standardizing them. The Copy Exercise button is held to the image
+    in skills/exercise-template's README."""
     seen: set[str] = set()
-    known = set(CANONICAL_BADGES.values())
+    known = set(CANONICAL_BADGES.values()) | {COPY_EXERCISE_IMAGE}
 
     for path in markdown_files():
         rel = path.relative_to(ROOT)
-        for url in re.findall(r"https://img\.shields\.io/badge/[^)\s`]+", read(path)):
-            if "Copy%20Exercise" in url:
-                continue
+        for url in re.findall(r"https://img\.shields\.io/badge/[^)\s`\"']+", read(path)):
             if url in known:
                 seen.add(url)
+            elif "Copy%20Exercise" in url:
+                fail("badges", f"{rel}: non-canonical Copy Exercise badge: {url}")
             else:
                 fail("badges", f"{rel}: non-canonical shields.io badge: {url}")
 
-    for kind, url in CANONICAL_BADGES.items():
+    for kind, url in {**CANONICAL_BADGES, "copy-exercise": COPY_EXERCISE_IMAGE}.items():
         if url not in seen:
             fail("badges", f"canonical '{kind}' badge is not documented anywhere")
+
+
+def check_badge_blocks() -> None:
+    """A prompt or command badge leads one blockquote: the badge, a bare `>`
+    line, then the fence language the badge requires. A blank line between them
+    splits the quote, and a wrong language changes how the block renders."""
+    badge_line = re.compile(
+        r"^(?P<prefix>[ \t]*)> !\[(?P<alt>[^\]]*)\]\((?P<url>https://img\.shields\.io/badge/[^)\s]+)\)\s*$"
+    )
+    for path in markdown_files():
+        rel = path.relative_to(ROOT)
+        lines = read(path).splitlines()
+        for index, line in enumerate(lines):
+            match = badge_line.match(line)
+            fence = BADGE_FENCES.get(match.group("url")) if match else None
+            if fence is None:
+                continue
+            prefix = match.group("prefix")
+            follow = [following.rstrip() for following in lines[index + 1 : index + 3]]
+            if match.group("alt") != "Static Badge" or follow != [prefix + ">", prefix + "> ```" + fence]:
+                fail(
+                    "badge-blocks",
+                    f"{rel}:{index + 1}: write '> ![Static Badge](...)', then '>', then '> ```{fence}' in one blockquote",
+                )
 
 
 def check_skeleton_slots() -> None:
@@ -431,6 +521,7 @@ def main() -> int:
     check_contract_self_consistency()
     check_skeleton_slots()
     check_badges()
+    check_badge_blocks()
 
     if args.online:
         check_toolkit_tag_online(ref)

@@ -16,10 +16,11 @@
     {
       "id": 2,
       "prompt": "I have an approved outline for a GitHub Skills exercise about resolving merge conflicts. Bootstrap the repository structure and describe the files, workflows, and validation scripts you would create. Include safe workflow permission guidance.",
-      "expected_output": "A bootstrap plan or file scaffold using the skills/exercise-template contract: README, numbered step Markdown, x-review, start and step workflows, grading job, safety guidance, and completion behavior.",
+      "expected_output": "A bootstrap plan or file scaffold using the skills/exercise-template contract: README with the Copy Exercise badge and footer, numbered step Markdown, x-review, start and step workflows, grading job, safety guidance, and completion behavior.",
       "files": [],
       "expectations": [
-        "The output names template-accurate files such as .github/steps/N-step.md, .github/steps/x-review.md, .github/workflows/0-start-exercise.yml, and a final N-last-step.yml.",
+        "The output names template-accurate files such as .github/steps/N-step.md, .github/steps/x-review.md, .github/workflows/0-start-exercise.yml, and N-step.yml step workflows, with the final one keeping the N-step.yml filename and named 'Step N # Last step of the exercise' rather than N-last-step.yml.",
+        "The README plan includes exactly one Copy Exercise badge under 'How to start this exercise', using the skills/exercise-template image unchanged and linking to github.com/new with the exercise's template_owner, template_name, owner=%40me, and name=skills-<repository>, and ends with a footer that matches LICENSE.",
         "The output mentions least-privilege workflow permissions.",
         "The output describes workflow chaining where only Step 0 is enabled initially and each step enables the next.",
         "The output describes how learner feedback and completion are handled."
@@ -64,13 +65,14 @@
     {
       "id": 6,
       "prompt": "Write step 2 of a GitHub Skills exercise where the learner asks Copilot Chat to explain a workflow file, then runs a gh command to confirm the workflow is enabled. Include the theory.",
-      "expected_output": "A step Markdown file with one Theory block containing real content, one Activity block with numbered instructions, badge-led blockquotes for the Copilot prompt and the terminal command, and a troubleshooting details block.",
+      "expected_output": "A step Markdown file with one Theory block containing real content, one unnumbered '### \u2328\ufe0f Activity:' block with '1.'-numbered instructions, badge-led blockquotes with a prompt fence for the Copilot prompt and a bash fence for the terminal command, the closing Mona instruction, and a 'Having trouble? \ud83e\udd37' block.",
       "files": [],
       "expectations": [
-        "The step includes a '### \ud83d\udcd6 Theory:' heading followed by actual explanatory content, not a placeholder.",
-        "The step includes a '### \u2328\ufe0f Activity:' heading with numbered instructions.",
-        "The Copilot Chat prompt is wrapped in a blockquote led by the purple Prompt shields.io badge, and the gh command is wrapped in a blockquote led by the blue Terminal shields.io badge.",
-        "The step includes a 'Having trouble?' details block with recovery hints."
+        "The step starts with '## Step 2:' and includes one '### \ud83d\udcd6 Theory:' heading followed by actual explanatory content, not a placeholder.",
+        "The step includes a single unnumbered '### \u2328\ufe0f Activity:' heading, because it has one activity, with lazy '1.'-numbered instructions.",
+        "The Copilot Chat prompt is in a blockquote led by the purple Prompt shields.io badge with a 'prompt' fence, and the gh command is in a blockquote led by the blue Terminal badge with a 'bash' fence. Each badge, bare '>' line, and fence form one blockquote indented three spaces under its list item.",
+        "The activity ends with '1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson.'",
+        "The activity is followed by a 'Having trouble? \ud83e\udd37' details block with recovery hints."
       ]
     },
     {
@@ -132,6 +134,33 @@
         "No candidate title or repository name contains a skills- prefix.",
         "The title and name candidates are derived from the prompt's topic and outcome (Copilot app, shipping a feature) rather than generic names.",
         "The output asks the user to approve the title and repository name with the outline and does not create files, check availability, or create a repository."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Use /bootstrap-github-skills-exercise to write .github/steps/3-step.md for my approved outline. The outline splits step 3 into three activities: start Copilot CLI from the terminal and sign in with /login, ask Copilot CLI to write a unit test for src/utils.js, then commit and push the test so the grading workflow can check it.",
+      "expected_output": "A step file that follows the template contract: one Theory block, three numbered activities that each have their own 'Having trouble? \ud83e\udd37' block, the correct badge and fence for each prompt or command, and the validation trigger and Mona instruction only in the final activity.",
+      "files": [],
+      "expectations": [
+        "The step starts with '## Step 3:' and has exactly one '### \ud83d\udcd6 Theory:' block with real content.",
+        "The activities are headed '### \u2328\ufe0f Activity 1:', '### \u2328\ufe0f Activity 2:', and '### \u2328\ufe0f Activity 3:' with no gaps, and no unnumbered '### \u2328\ufe0f Activity:' heading is mixed in.",
+        "Each activity is directly followed by its own 'Having trouble? \ud83e\udd37' details block.",
+        "The command that starts Copilot CLI uses the Terminal badge with a bash fence, while /login and the unit test prompt use the CLI Prompt badge with a prompt fence. The commit and push commands use the Terminal badge.",
+        "Instructions use lazy '1.' numbering with badge blockquotes indented three spaces under their list items.",
+        "Only the final activity ends with the commit and push trigger followed by '1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson.'"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Use /review-github-skills-exercise on this draft. The README has no footer, and its only start link is `[![Copy](https://img.shields.io/badge/Copy-Exercise-green)](https://github.com/new?template_owner=OWNER&template_name=ask-copilot)`. Here is .github/steps/2-step.md:\n\n## Step 2: Ask Copilot\n### \ud83d\udcd6 Theory: Prompts\nPrompts tell Copilot what you want.\n### \u2328\ufe0f Activity 1: Ask a question\n1. Open Copilot Chat.\n2. Ask Copilot:\n> ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)\n\n```text\nExplain this repository\n```\n### \u2328\ufe0f Activity: Commit your notes\n1. Commit notes.md to main.\n<details><summary>Having trouble? \ud83e\udd37</summary><br/>Check that notes.md exists.</details>",
+      "expected_output": "A report-only review that ranks the Copy Exercise, activity, badge block, and footer defects with the severity guide, gives each a location, impact, and fix, and stops without editing files.",
+      "files": [],
+      "expectations": [
+        "The review flags the Copy Exercise link as a blocker: the template_owner is still OWNER. It also flags the restyled image and the missing owner=%40me, name=skills-ask-copilot, description, and visibility parameters, and proposes the canonical badge from the skills/exercise-template README.",
+        "The review flags the mixed activity headings ('Activity 1' followed by an unnumbered 'Activity') and the missing 'Having trouble? \ud83e\udd37' block after Activity 1.",
+        "The review flags the explicit '2.' numbering and the badge block: the badge is not indented under its list item, a blank line splits it from its fence, and the fence is 'text' instead of 'prompt'.",
+        "The review flags the missing '1. Wait a moment for Mona...' closing instruction and the missing README footer.",
+        "Each finding has a location, impact, and proposed fix, and the review stops without editing files."
       ]
     }
   ]

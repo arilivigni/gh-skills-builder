@@ -35,13 +35,17 @@ Confirm which path applies before running anything:
    the outline's target owner when it names one. A default is a proposal, not authorization: the user must
    still explicitly confirm the exact owner and repository. If they choose a different name, update the
    README Copy Exercise badge (`template_name`, `name=skills-<repository name>`) and the saved outline before
-   pushing.
+   pushing. If the README footer still has the `(replace-me: copyright holder)` slot, ask who holds the
+   copyright (usually the publishing organization). Before pushing, create the MIT `LICENSE` with that holder
+   and the current year, and use the same year and holder in the footer.
 2. **Confirm the intended visibility explicitly.** Ask the user whether the exercise should be public or
    private, and use the matching flag. Never default to public: a repository meant to be private is exposed
    the moment it is created, and flipping the flag afterwards does not undo that exposure.
 
    Public is the common choice for GitHub Skills exercises, because private repositories consume Actions
-   minutes. Surface that as a recommendation, not as a silent default.
+   minutes. Surface that as a recommendation, not as a silent default. If the user chooses private, change the
+   README Copy Exercise badge's `visibility=public` to `visibility=private` before pushing, so learners' copies
+   of a private exercise stay private too.
 
 3. If the target repository does not exist, confirm you have permission to create repositories in the target owner. For
    an organization, that is the `Create repositories` permission, plus admin on the new repository to set the
@@ -80,8 +84,9 @@ Confirm which path applies before running anything:
 
 8. Verify only the start workflow (`Step 0`) is enabled. Disable every later step workflow; they are enabled
    by the preceding step as the learner progresses.
-9. Verify the README Copy Exercise badge uses the published `template_owner` and `template_name`, and that its
-   `visibility` parameter matches the visibility the user confirmed.
+9. Verify the README Copy Exercise badge uses the published `template_owner` and `template_name`, that its
+   `name` is `skills-<repository name>`, and that its `visibility` parameter matches the visibility the user
+   confirmed: `public` for a public exercise, `private` for a private one.
 
 ### Path B: transfer between organizations
 
@@ -123,16 +128,26 @@ manual recovery path. Do not retry destructive operations or work around a permi
 ## Release-readiness checklist
 
 - README includes title, Welcome block, learner audience, prerequisites, duration, start path, and support path.
-- The Copy Exercise badge uses the correct `template_owner` and `template_name` for the published location.
+- The README has exactly one Copy Exercise badge, under `### How to start this exercise`. It uses the
+  canonical image from the [`skills/exercise-template` README](https://github.com/skills/exercise-template/blob/main/README.md),
+  the correct `template_owner` and `template_name` for the published location, and a `visibility` that matches
+  the exercise's own.
+- The README ends with a `---` rule and the `&copy; <year> <holder>` footer, and the year matches `LICENSE`.
 - The published repository name matches the approved name in `.github/exercise-outline.md`, or the outline
   and badge were updated together when the name changed.
 - Exercise steps match the stated objectives.
-- Every step has a Theory block with real content and at least one Activity block.
-- Copilot prompts and terminal commands in activities use the standard badge blocks.
+- Every step starts with `## Step N:` and has exactly one Theory block with real content, then either one
+  `### ⌨️ Activity:` or activities numbered from `### ⌨️ Activity 1:` with no gaps. Each activity has its own
+  `Having trouble? 🤷` block, and the final activity ends with the "Wait a moment for Mona" instruction.
+- Copilot prompts and terminal commands in activities use the standard badge blocks: the badge, a bare `>`
+  line, and a `prompt` fence (Prompt, CLI Prompt) or a `bash` fence (Terminal), all in one blockquote.
 - No placeholder text remains anywhere in `README.md` or `.github/`: not only `replace-me`, but bare
-  skeleton tokens (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`) and bracketed slots such as `[Step name]`.
-- Step content and step workflows align by number; the final workflow is `N-last-step.yml` and the review
-  content is `.github/steps/x-review.md`.
+  skeleton tokens (`OWNER`, `REPO`, `ORG`, `TITLE`, `FEATURE`, `VISIBILITY`) and bracketed slots such as
+  `[Step name]`.
+- Step content and step workflows align by number. The final workflow is `N-step.yml` with
+  `name: Step N # Last step of the exercise`, and the review content is `.github/steps/x-review.md`.
+- The template contract's Pre-handoff checks pass. They are in `references/exercise-template-contract.md`
+  in the `bootstrap-github-skills-exercise` skill.
 - Every `skills/exercise-toolkit` reference uses the same pinned release tag.
 - Workflows use least-privilege permissions and have clear trigger behavior.
 - The start workflow has a real first-run trigger, or the README explicitly documents a manual start.
@@ -141,7 +156,8 @@ manual recovery path. Do not retry destructive operations or work around a permi
 - Reset/retry behavior is documented and safe for repeated learners.
 - No source content contains repository-specific absolute URLs unless required.
 - Exercise images are stored in `.github/images` and referenced with relative paths.
-- `[!NOTE]`, `[!IMPORTANT]`, and `[!TIP]` callouts are left-justified (no indentation).
+- `[!NOTE]`, `[!IMPORTANT]`, and `[!TIP]` callouts are left-justified (no indentation) when they are not
+  part of a list. Inside an activity's numbered list, a callout is indented three spaces under its item.
 - License, attribution, and contribution notes are present where needed.
 
 Expected callout formatting:
