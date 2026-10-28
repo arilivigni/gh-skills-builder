@@ -40,7 +40,16 @@ COPY_EXERCISE_IMAGE = "https://img.shields.io/badge/Copy%20Exercise-%E2%86%92-1f
 
 MONA_LINE = "1. Wait a moment for Mona to check your work, provide feedback, and share the next lesson."
 
-CONTRACT = Path("skills/bootstrap-github-skills-exercise/references/exercise-template-contract.md")
+CONTRACT = Path("skills/github-skills-bootstrap/references/exercise-template-contract.md")
+
+# Skill names before 3.0, mapped to their replacements.
+RENAMED_SKILLS = {
+    "orchestrate-github-skills-exercise": "github-skills-orchestrate",
+    "create-github-skills-outline": "github-skills-outline",
+    "bootstrap-github-skills-exercise": "github-skills-bootstrap",
+    "review-github-skills-exercise": "github-skills-review",
+    "publish-github-skills-exercise": "github-skills-publish",
+}
 
 failures: list[str] = []
 
@@ -131,11 +140,11 @@ def check_lifecycle_topology() -> None:
         fail("lifecycle", "manifest must register the orchestrator via ./agents")
 
     expected_skills = {
-        "orchestrate-github-skills-exercise",
-        "create-github-skills-outline",
-        "bootstrap-github-skills-exercise",
-        "review-github-skills-exercise",
-        "publish-github-skills-exercise",
+        "github-skills-orchestrate",
+        "github-skills-outline",
+        "github-skills-bootstrap",
+        "github-skills-review",
+        "github-skills-publish",
     }
     on_disk = {p.parent.name for p in ROOT.glob("skills/*/SKILL.md")}
     registered = manifest.get("skills", [])
@@ -152,6 +161,16 @@ def check_lifecycle_topology() -> None:
         for name in agent_reference.findall(read(path)):
             if name != "@github-skills-orchestrator":
                 fail("lifecycle", f"{path.relative_to(ROOT)}: obsolete specialist-agent reference {name}")
+
+    # A line may name a pre-3.0 skill only alongside its replacement, as in a migration table row.
+    for path in paths:
+        for lineno, line in enumerate(read(path).splitlines(), start=1):
+            for old, new in RENAMED_SKILLS.items():
+                if re.search(rf"\b{old}\b", line) and not re.search(rf"\b{new}\b", line):
+                    fail(
+                        "lifecycle",
+                        f"{path.relative_to(ROOT)}:{lineno}: obsolete skill name {old}; use {new}",
+                    )
 
 
 def check_fence_balance() -> None:

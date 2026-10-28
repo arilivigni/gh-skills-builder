@@ -1,5 +1,5 @@
 ---
-name: publish-github-skills-exercise
+name: github-skills-publish
 description: "Prepare a GitHub Skills exercise for publication, contribution, or rollout. Use this when the user asks for release readiness, final checklist, README/marketplace copy, PR description, validation evidence, launch notes, or publishing guidance for a GitHub Skills-style exercise."
 ---
 
@@ -147,7 +147,7 @@ manual recovery path. Do not retry destructive operations or work around a permi
 - Step content and step workflows align by number. The final workflow is `N-step.yml` with
   `name: Step N # Last step of the exercise`, and the review content is `.github/steps/x-review.md`.
 - The template contract's Pre-handoff checks pass. They are in `references/exercise-template-contract.md`
-  in the `bootstrap-github-skills-exercise` skill.
+  in the `github-skills-bootstrap` skill.
 - Every `skills/exercise-toolkit` reference uses the same pinned release tag.
 - Workflows use least-privilege permissions and have clear trigger behavior.
 - The start workflow has a real first-run trigger, or the README explicitly documents a manual start.

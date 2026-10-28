@@ -1,5 +1,5 @@
 ---
-name: bootstrap-github-skills-exercise
+name: github-skills-bootstrap
 description: "Bootstrap a GitHub Skills exercise repository from an approved outline, following the skills/exercise-template layout: a README with the Copy Exercise badge, .github/workflows/0-start-exercise.yml, numbered .github/steps/N-step.md files with matching N-step.yml workflows, and .github/steps/x-review.md. Use this when the user asks to create exercise files, step Markdown, issue templates, GitHub Actions workflows, validation scripts, starter content, or repository structure for a GitHub Skills-style learning experience."
 ---
 
@@ -17,7 +17,7 @@ Use this skill when an outline is approved and the user wants repository content
 
 Do not start until you have:
 
-1. An approved outline. If none exists, run `create-github-skills-outline` first.
+1. An approved outline. If none exists, run `github-skills-outline` first.
 2. A step-by-step journey where **every step has exactly one Theory block and one or more Activity blocks**,
    with each activity's troubleshooting tips planned.
 3. A decision for each step on whether it is graded and what the grading check asserts.
@@ -63,7 +63,7 @@ gives later rounds and resumption a durable record of the outline:
    footer's `(replace-me: copyright holder)` slot and report it.
 
 Do not create, rename, or push a GitHub repository from this skill. Repository creation belongs to
-`publish-github-skills-exercise` behind explicit authorization.
+`github-skills-publish` behind explicit authorization.
 
 ## Build order
 

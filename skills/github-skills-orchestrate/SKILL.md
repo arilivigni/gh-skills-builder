@@ -1,5 +1,5 @@
 ---
-name: orchestrate-github-skills-exercise
+name: github-skills-orchestrate
 description: "Run the end-to-end GitHub Skills exercise lifecycle as an approval-gated loop: outline, bootstrap, review and fix, then publish. Use this when the user wants to build a complete exercise from an idea, wants the whole process coordinated, or asks what the next step is in an in-flight exercise build."
 ---
 
@@ -13,10 +13,10 @@ do not delegate to specialist agents or merge the phase requirements into the co
 
 | Phase | Skill to load |
 | --- | --- |
-| 1. Outline | `create-github-skills-outline` |
-| 2. Bootstrap | `bootstrap-github-skills-exercise` |
-| 3. Review and fix | `review-github-skills-exercise` |
-| 4. Publish | `publish-github-skills-exercise` |
+| 1. Outline | `github-skills-outline` |
+| 2. Bootstrap | `github-skills-bootstrap` |
+| 3. Review and fix | `github-skills-review` |
+| 4. Publish | `github-skills-publish` |
 
 ## The loop
 
@@ -54,7 +54,7 @@ These are not optional.
 
 ## Phase 1: Outline
 
-Load `create-github-skills-outline`. Iterate with the user on each revision, stating what changed and what
+Load `github-skills-outline`. Iterate with the user on each revision, stating what changed and what
 still needs a decision.
 
 Gate 1 passes when the user explicitly approves the outline, including its title and repository name. Before
@@ -70,7 +70,7 @@ moving on, confirm:
 
 ## Phase 2: Bootstrap
 
-Load `bootstrap-github-skills-exercise` against the approved outline. Follow its template-contract,
+Load `github-skills-bootstrap` against the approved outline. Follow its template-contract,
 toolkit-version, and completion requirements before reporting the build.
 
 At the end of **every** build round, stop and report:
@@ -85,7 +85,7 @@ Then ask for approval or change requests. Gate 2 passes when the user says the b
 
 ## Phase 3: Review and fix
 
-Load `review-github-skills-exercise`. Review is report-only: do not edit files, apply fixes, or change
+Load `github-skills-review`. Review is report-only: do not edit files, apply fixes, or change
 repository or remote state in this phase, even when tools permit it. This is a behavioral boundary, not
 restricted tool access or an independent review of the coordinator's own work.
 
@@ -97,9 +97,9 @@ At the end of **every** review round, stop and report:
 
 Ask the user which fixes to apply before applying any. Then:
 
-1. Load `bootstrap-github-skills-exercise` and apply only the approved fixes in a separate build round.
+1. Load `github-skills-bootstrap` and apply only the approved fixes in a separate build round.
 2. Report the build round and wait for Gate 2 approval.
-3. Reload `review-github-skills-exercise` and re-review.
+3. Reload `github-skills-review` and re-review.
 4. Report again and wait.
 
 Gate 3 passes when there are no blocking findings and the user signs off. If a finding survives two fix
@@ -107,7 +107,7 @@ rounds, stop and escalate.
 
 ## Phase 4: Publish
 
-Load `publish-github-skills-exercise` to produce validation evidence, the release checklist, PR copy, and
+Load `github-skills-publish` to produce validation evidence, the release checklist, PR copy, and
 release notes.
 
 Gate 4 passes only when the user explicitly authorizes the action and names the target. Propose the
