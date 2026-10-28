@@ -89,11 +89,11 @@
     },
     {
       "id": 8,
-      "prompt": "@github-skills-orchestrator Use /review-github-skills-exercise to review the exercise you just built. You have edit and command tools available. If you find blockers, tell me what should change.",
+      "prompt": "@github-skills-orchestrator Use /github-skills-review to review the exercise you just built. You have edit and command tools available. If you find blockers, tell me what should change.",
       "expected_output": "A report-only review with prioritized findings, locations, impacts, proposed fixes, and unverified checks, followed by a stop for user decisions.",
       "files": [],
       "expectations": [
-        "The orchestrator loads review-github-skills-exercise directly without delegating to a specialist agent.",
+        "The orchestrator loads github-skills-review directly without delegating to a specialist agent.",
         "The review does not edit files, apply fixes, or mutate repository or remote state even though tools permit it.",
         "The output reports findings and proposed fixes and waits for the user to select fixes.",
         "The output does not claim that self-review is independent or that the review skill enforces a tool-permission boundary."
@@ -105,19 +105,19 @@
       "expected_output": "A separate bootstrap fix round limited to the approved finding, with a build report and a stop for approval before re-review.",
       "files": [],
       "expectations": [
-        "The orchestrator loads bootstrap-github-skills-exercise for the approved fix rather than editing during the review phase.",
+        "The orchestrator loads github-skills-bootstrap for the approved fix rather than editing during the review phase.",
         "Only the approved missing Theory block fix is applied; unrelated findings are not silently fixed.",
         "The output reports the fix round and waits for build approval instead of chaining directly into review.",
-        "The output states that review-github-skills-exercise must be reloaded after build approval and review sign-off is still required before publication."
+        "The output states that github-skills-review must be reloaded after build approval and review sign-off is still required before publication."
       ]
     },
     {
       "id": 10,
-      "prompt": "@github-skills-orchestrator Use /publish-github-skills-exercise to prepare release notes for my reviewed exercise. I have not decided the target owner, repository, or visibility.",
+      "prompt": "@github-skills-orchestrator Use /github-skills-publish to prepare release notes for my reviewed exercise. I have not decided the target owner, repository, or visibility.",
       "expected_output": "Publication preparation without creating, pushing, publishing, or transferring a repository, with unresolved target and visibility decisions clearly identified.",
       "files": [],
       "expectations": [
-        "The orchestrator loads publish-github-skills-exercise directly and prepares release copy without delegating to a specialist agent.",
+        "The orchestrator loads github-skills-publish directly and prepares release copy without delegating to a specialist agent.",
         "Release-preparation permission is not treated as authorization to create, push, publish, transfer, or change repository visibility.",
         "Actual publication requires explicit authorization naming the target owner and repository.",
         "Visibility is confirmed explicitly before repository creation; public visibility is not silently assumed."
@@ -138,7 +138,7 @@
     },
     {
       "id": 12,
-      "prompt": "Use /bootstrap-github-skills-exercise to write .github/steps/3-step.md for my approved outline. The outline splits step 3 into three activities: start Copilot CLI from the terminal and sign in with /login, ask Copilot CLI to write a unit test for src/utils.js, then commit and push the test so the grading workflow can check it.",
+      "prompt": "Use /github-skills-bootstrap to write .github/steps/3-step.md for my approved outline. The outline splits step 3 into three activities: start Copilot CLI from the terminal and sign in with /login, ask Copilot CLI to write a unit test for src/utils.js, then commit and push the test so the grading workflow can check it.",
       "expected_output": "A step file that follows the template contract: one Theory block, three numbered activities that each have their own 'Having trouble? \ud83e\udd37' block, the correct badge and fence for each prompt or command, and the validation trigger and Mona instruction only in the final activity.",
       "files": [],
       "expectations": [
@@ -152,7 +152,7 @@
     },
     {
       "id": 13,
-      "prompt": "Use /review-github-skills-exercise on this draft. The README has no footer, and its only start link is `[![Copy](https://img.shields.io/badge/Copy-Exercise-green)](https://github.com/new?template_owner=OWNER&template_name=ask-copilot)`. Here is .github/steps/2-step.md:\n\n## Step 2: Ask Copilot\n### \ud83d\udcd6 Theory: Prompts\nPrompts tell Copilot what you want.\n### \u2328\ufe0f Activity 1: Ask a question\n1. Open Copilot Chat.\n2. Ask Copilot:\n> ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)\n\n```text\nExplain this repository\n```\n### \u2328\ufe0f Activity: Commit your notes\n1. Commit notes.md to main.\n<details><summary>Having trouble? \ud83e\udd37</summary><br/>Check that notes.md exists.</details>",
+      "prompt": "Use /github-skills-review on this draft. The README has no footer, and its only start link is `[![Copy](https://img.shields.io/badge/Copy-Exercise-green)](https://github.com/new?template_owner=OWNER&template_name=ask-copilot)`. Here is .github/steps/2-step.md:\n\n## Step 2: Ask Copilot\n### \ud83d\udcd6 Theory: Prompts\nPrompts tell Copilot what you want.\n### \u2328\ufe0f Activity 1: Ask a question\n1. Open Copilot Chat.\n2. Ask Copilot:\n> ![Static Badge](https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple)\n\n```text\nExplain this repository\n```\n### \u2328\ufe0f Activity: Commit your notes\n1. Commit notes.md to main.\n<details><summary>Having trouble? \ud83e\udd37</summary><br/>Check that notes.md exists.</details>",
       "expected_output": "A report-only review that ranks the Copy Exercise, activity, badge block, and footer defects with the severity guide, gives each a location, impact, and fix, and stops without editing files.",
       "files": [],
       "expectations": [

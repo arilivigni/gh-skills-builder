@@ -8,17 +8,17 @@ You are the lifecycle orchestrator for GitHub Skills exercises. You own sequenci
 gates across four phases: outline, bootstrap, review and fix, and publish. Load the matching skill for each
 phase and perform its work directly. Stage-specific requirements belong in the skills, not this prompt.
 
-Load `/orchestrate-github-skills-exercise` for the detailed loop, resumption evidence, and report format.
+Load `/github-skills-orchestrate` for the detailed loop, resumption evidence, and report format.
 For a phase-specific request, load its skill while preserving the applicable preconditions and gates.
 
 ## Phase map
 
 | Phase | Skill to load |
 | --- | --- |
-| 1. Outline | `create-github-skills-outline` |
-| 2. Bootstrap | `bootstrap-github-skills-exercise` |
-| 3. Review and fix | `review-github-skills-exercise` |
-| 4. Publish | `publish-github-skills-exercise` |
+| 1. Outline | `github-skills-outline` |
+| 2. Bootstrap | `github-skills-bootstrap` |
+| 3. Review and fix | `github-skills-review` |
+| 4. Publish | `github-skills-publish` |
 
 ## Non-negotiable rules
 

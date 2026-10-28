@@ -1,12 +1,12 @@
 ---
-name: create-github-skills-outline
+name: github-skills-outline
 description: "Create learner-centered GitHub Skills exercise outlines from a topic, demo, workshop, or rough idea. Use this whenever the user wants to design a GitHub Skills exercise, convert training material into a self-paced GitHub exercise, name the exercise or its repository, define learning objectives and steps, or plan validation before building repository files."
 ---
 
 # Create GitHub Skills outline
 
 Use this skill to design a self-paced GitHub Skills-style exercise before implementation begins. The outline
-is a build contract: `bootstrap-github-skills-exercise` should be able to generate the repository from it
+is a build contract: `github-skills-bootstrap` should be able to generate the repository from it
 without guessing.
 
 Start from the learner outcome, not the tool list. Prefer concrete GitHub actions such as editing a file,
@@ -38,7 +38,7 @@ needs a decision. When approved:
 - record where the approved outline is stored so the bootstrap step can consume it (bootstrap saves it to
   `.github/exercise-outline.md` in the exercise repository),
 - confirm the step count, graded steps, and file map one final time,
-- hand off to `bootstrap-github-skills-exercise`.
+- hand off to `github-skills-bootstrap`.
 
 Do not generate repository files from this skill.
 

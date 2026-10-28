@@ -63,23 +63,36 @@ keeps sequencing, approval gates, and publication authorization explicit.
 > boundary: the orchestrator still has edit tools. Reviewing its own work is not independent review. If you
 > need independent review or enforced restricted access, arrange it separately.
 
+**Migrating to 3.0:** The five lifecycle skills now share the `github-skills-` prefix. Update saved prompts,
+scripts, and documentation that invoke them by name. The old names have no aliases, and an installed 2.x copy
+keeps the old names until you update the plugin. The `@github-skills-orchestrator` agent and the
+`gh-skills-builder` plugin name are unchanged.
+
+| 2.x skill | 3.0 skill |
+| --- | --- |
+| `/orchestrate-github-skills-exercise` | `/github-skills-orchestrate` |
+| `/create-github-skills-outline` | `/github-skills-outline` |
+| `/bootstrap-github-skills-exercise` | `/github-skills-bootstrap` |
+| `/review-github-skills-exercise` | `/github-skills-review` |
+| `/publish-github-skills-exercise` | `/github-skills-publish` |
+
 **Migrating to 2.0:** The four specialist agent entry points have been removed. Replace their mentions with
-`@github-skills-orchestrator` and invoke the corresponding phase skill, as shown below. All five skill names
-are unchanged.
+`@github-skills-orchestrator` and invoke the corresponding phase skill, as shown below. Skill names did not
+change in 2.0; they were renamed in 3.0.
 
 ### Skills
 
 The plugin provides five lifecycle skills:
 
-- `/orchestrate-github-skills-exercise` — run the whole loop with approval gates between every round.
-- `/create-github-skills-outline` — design a new exercise or convert training material into a self-paced GitHub Skills outline, including an eye-catching title and repository name candidates approved at Gate 1.
-- `/bootstrap-github-skills-exercise` — create the repository shell (saved outline in `.github/exercise-outline.md` plus a README stub with the approved name and the Copy Exercise badge), then `0-start-exercise.yml`, numbered step Markdown and workflows ending in `x-review.md`, validation scripts, and starter structure, checked with the template contract's pre-handoff checks.
-- `/review-github-skills-exercise` — audit an exercise for learner experience, step and activity consistency, template parity, validation correctness, workflow safety, accessibility, and readiness, ranking findings with a severity guide.
-- `/publish-github-skills-exercise` — prepare final checklist, release notes, PR copy, validation evidence, and publish or transfer guidance, defaulting the target to the approved repository name while still requiring explicit authorization.
+- `/github-skills-orchestrate` — run the whole loop with approval gates between every round.
+- `/github-skills-outline` — design a new exercise or convert training material into a self-paced GitHub Skills outline, including an eye-catching title and repository name candidates approved at Gate 1.
+- `/github-skills-bootstrap` — create the repository shell (saved outline in `.github/exercise-outline.md` plus a README stub with the approved name and the Copy Exercise badge), then `0-start-exercise.yml`, numbered step Markdown and workflows ending in `x-review.md`, validation scripts, and starter structure, checked with the template contract's pre-handoff checks.
+- `/github-skills-review` — audit an exercise for learner experience, step and activity consistency, template parity, validation correctness, workflow safety, accessibility, and readiness, ranking findings with a severity guide.
+- `/github-skills-publish` — prepare final checklist, release notes, PR copy, validation evidence, and publish or transfer guidance, defaulting the target to the approved repository name while still requiring explicit authorization.
 
 ### Template contract reference
 
-`skills/bootstrap-github-skills-exercise/references/exercise-template-contract.md` captures the concrete
+`skills/github-skills-bootstrap/references/exercise-template-contract.md` captures the concrete
 conventions implemented by [`skills/exercise-template`](https://github.com/skills/exercise-template) and
 [`skills/exercise-toolkit`](https://github.com/skills/exercise-toolkit): canonical file names, workflow
 skeletons, reusable workflow inputs and outputs, action pins, workflow enable/disable chaining, permission
@@ -94,7 +107,7 @@ before writing files, and the review skill runs the same checks.
 
 ```
 @github-skills-orchestrator I want to build a GitHub Skills exercise that teaches [topic].
-Use /orchestrate-github-skills-exercise and check in with me after every build and review round.
+Use /github-skills-orchestrate and check in with me after every build and review round.
 ```
 
 The orchestrator runs the four phases and stops at each gate:
@@ -120,34 +133,34 @@ flowchart LR
 
 ```
 @github-skills-orchestrator I want to teach [topic] as a 30-minute GitHub Skills exercise.
-Use /create-github-skills-outline to define objectives, learner steps, and validation ideas.
+Use /github-skills-outline to define objectives, learner steps, and validation ideas.
 ```
 
 #### 2. Bootstrap the repository
 
 ```
 @github-skills-orchestrator Use the approved outline to scaffold the exercise.
-Use /bootstrap-github-skills-exercise to create README content, steps, workflows, and validation guidance.
+Use /github-skills-bootstrap to create README content, steps, workflows, and validation guidance.
 ```
 
 #### 3. Review before launch
 
 ```
 @github-skills-orchestrator Review this exercise for learner clarity, validation reliability, workflow safety, and accessibility.
-Use /review-github-skills-exercise, prioritize release blockers, and report findings without editing files.
+Use /github-skills-review, prioritize release blockers, and report findings without editing files.
 ```
 
 #### 4. Prepare for publication
 
 ```
 @github-skills-orchestrator Prepare this exercise for release.
-Use /publish-github-skills-exercise to produce validation evidence, PR description, release notes, and remaining risks.
+Use /github-skills-publish to produce validation evidence, PR description, release notes, and remaining risks.
 ```
 
 To publish into an organization or move an existing exercise between organizations:
 
 ```
-@github-skills-orchestrator Use /publish-github-skills-exercise to plan a transfer of source-org/exercise-repo to dest-org/exercise-repo.
+@github-skills-orchestrator Use /github-skills-publish to plan a transfer of source-org/exercise-repo to dest-org/exercise-repo.
 Wait for my explicit authorization before transferring, then fix the Copy Exercise badge afterward.
 ```
 
@@ -256,7 +269,7 @@ It checks that:
 | Check | Catches |
 | --- | --- |
 | Agent frontmatter | Missing `name`/`description`, names that are not lowercase kebab-case, or names that disagree with the filename. The manifest only references `./agents` as a directory, so nothing else validates these. |
-| Lifecycle topology | Anything other than the single orchestrator and five lifecycle skills, or obsolete specialist-agent mentions in maintained plugin content. |
+| Lifecycle topology | Anything other than the single orchestrator and five lifecycle skills, obsolete specialist-agent mentions, or pre-3.0 skill names in maintained plugin content. A pre-3.0 name is allowed only on a line that also names its replacement, such as a migration table row. |
 | Skill registration | A skill with a `SKILL.md` that was never added to `plugin.json`. |
 | Code fence balance | An unclosed fence that silently swallows the rest of a document. |
 | YAML blocks | A workflow skeleton that does not parse. These get copy-pasted into real exercises. |

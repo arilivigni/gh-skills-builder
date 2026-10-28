@@ -1,5 +1,5 @@
 ---
-name: review-github-skills-exercise
+name: github-skills-review
 description: "Review GitHub Skills exercises for learner experience, step and activity consistency, parity with skills/exercise-template (0-start workflow, numbered steps, x-review.md, Copy Exercise badge), validation correctness, workflow safety, accessibility, and publish readiness. Use this whenever the user asks to audit, review, improve, QA, or validate a GitHub Skills-style exercise repository or draft."
 ---
 
@@ -26,7 +26,7 @@ the exercise is not independent review.
    follows the same step and activity anatomy.
 4. Inspect workflows, local actions, scripts, and templates that drive validation or feedback.
 5. Check template parity against the template contract, `references/exercise-template-contract.md` in the
-   `bootstrap-github-skills-exercise` skill: file and workflow numbering, the final workflow, toolkit ref
+   `github-skills-bootstrap` skill: file and workflow numbering, the final workflow, toolkit ref
    consistency, chaining, the README Copy Exercise badge and footer, and leftover placeholders.
 6. Run the contract's Pre-handoff checks from the exercise repository root when the environment allows. They
    only read files and query whether the pinned toolkit tag exists. Run each check on its own so one failure
