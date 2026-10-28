@@ -166,7 +166,7 @@ def check_lifecycle_topology() -> None:
     for path in paths:
         for lineno, line in enumerate(read(path).splitlines(), start=1):
             for old, new in RENAMED_SKILLS.items():
-                if re.search(rf"\b{old}\b", line) and not re.search(rf"\b{new}\b", line):
+                if re.search(rf"\b{old}\b", line) and not re.search(rf"(?<![\w-]){new}(?![\w-])", line):
                     fail(
                         "lifecycle",
                         f"{path.relative_to(ROOT)}:{lineno}: obsolete skill name {old}; use {new}",
