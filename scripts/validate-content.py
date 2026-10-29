@@ -86,14 +86,31 @@ def frontmatter(text: str) -> str | None:
     return match.group(1) if match else None
 
 
-def frontmatter_keys(block: str) -> dict[str, str]:
-    values = {}
-    for line in block.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or ":" not in stripped:
-            continue
-        key, value = stripped.split(":", 1)
-        values[key.strip()] = value.strip().strip('"').strip("'")
+def frontmatter_metadata(block: str, path: Path, check: str) -> dict[str, str] | None:
+    try:
+        import yaml
+    except ImportError:
+        fail(check, "PyYAML is not installed; cannot validate frontmatter")
+        return None
+
+    rel = path.relative_to(ROOT)
+    try:
+        metadata = yaml.safe_load(block)
+    except yaml.YAMLError as error:
+        fail(check, f"{rel}: frontmatter does not parse: {error}")
+        return None
+    if not isinstance(metadata, dict):
+        fail(check, f"{rel}: frontmatter must be a YAML mapping")
+        return None
+
+    values: dict[str, str] = {}
+    for field in ("name", "description"):
+        if field not in metadata:
+            fail(check, f"{rel}: missing required field '{field}'")
+        elif not isinstance(metadata[field], str) or not metadata[field].strip():
+            fail(check, f"{rel}: field '{field}' must be a non-empty string")
+        else:
+            values[field] = metadata[field]
     return values
 
 
@@ -164,11 +181,9 @@ def check_agents() -> None:
             fail("agents", f"{rel}: missing frontmatter block")
             continue
 
-        keys = frontmatter_keys(block)
-        for required in ("name", "description"):
-            if required not in keys:
-                fail("agents", f"{rel}: missing required frontmatter field '{required}'")
-
+        keys = frontmatter_metadata(block, path, "agents")
+        if keys is None:
+            continue
         name = keys.get("name")
         if name is None:
             continue
@@ -201,10 +216,9 @@ def check_skill_discovery() -> None:
         if block is None:
             fail("skills", f"{path.relative_to(ROOT)}: missing frontmatter block")
             continue
-        keys = frontmatter_keys(block)
-        for required in ("name", "description"):
-            if not keys.get(required):
-                fail("skills", f"{path.relative_to(ROOT)}: missing required field '{required}'")
+        keys = frontmatter_metadata(block, path, "skills")
+        if keys is None:
+            continue
         if keys.get("name") != directory.name:
             fail("skills", f"{path.relative_to(ROOT)}: name must match skill directory")
 

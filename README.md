@@ -263,7 +263,7 @@ This plugin follows strict semantic versioning:
 `.github/workflows/plugin-ci.yml` runs on pull requests and pushes to `main` and validates:
 - root `plugin.json` syntax, Agent Plugins v1.0.0 fields and schema identifier, and absence of legacy manifests
 - Copilot agent discovery under `com.github.copilot/agents/` and skill discovery under `skills/`
-- required `name` and `description` metadata presence in each skill `SKILL.md`
+- agent and skill frontmatter parsed as YAML, with non-empty top-level `name` and `description` strings (including indented, folded, and literal descriptions)
 - local markdown links in `README.md`
 - content consistency via `scripts/validate-content.py`
 - packaging regression tests via `python3 -m unittest discover -s scripts -p 'test_*.py'`

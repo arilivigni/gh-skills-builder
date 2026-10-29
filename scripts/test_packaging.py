@@ -137,8 +137,58 @@ class PackagingTests(unittest.TestCase):
         skill = self.root / "skills/github-skills-outline/SKILL.md"
         skill.write_text("---\nname: wrong-name\ndescription: ''\n---\n")
         validator.check_skill_discovery()
-        self.assert_failure("missing required field 'description'")
+        self.assert_failure("field 'description' must be a non-empty string")
         self.assert_failure("name must match skill directory")
+
+    def test_valid_yaml_frontmatter_formats_are_accepted(self):
+        for path, name, check in (
+            (self.root / "skills/github-skills-outline/SKILL.md",
+             "github-skills-outline", validator.check_skill_discovery),
+            (self.agent, "github-skills-orchestrator", validator.check_agents),
+        ):
+            for description in (
+                "description:\n  A valid indented description.",
+                "description: >-\n  A folded description\n  over two lines.",
+                "description: |\n  A literal description.\n  Another line.",
+                'description: "Quoted: description" # comment',
+                "description: A plain description. # comment",
+            ):
+                with self.subTest(path=path, description=description):
+                    validator.failures.clear()
+                    path.write_text(f'---\nname: "{name}" # comment\n{description}\n---\n')
+                    check()
+                    self.assertEqual([], validator.failures)
+
+    def test_invalid_yaml_frontmatter_is_reported(self):
+        for path, check in (
+            (self.root / "skills/github-skills-outline/SKILL.md", validator.check_skill_discovery),
+            (self.agent, validator.check_agents),
+        ):
+            for block, expected in (
+                ("name: [unclosed", "frontmatter does not parse"),
+                ("- name: nested\n- description: nested", "frontmatter must be a YAML mapping"),
+                ("null", "frontmatter must be a YAML mapping"),
+                ("metadata:\n  name: nested\n  description: nested", "missing required field 'name'"),
+            ):
+                with self.subTest(path=path, block=block):
+                    validator.failures.clear()
+                    path.write_text(f"---\n{block}\n---\n")
+                    check()
+                    self.assert_failure(expected)
+
+    def test_frontmatter_fields_must_be_nonempty_strings(self):
+        for path, check in (
+            (self.root / "skills/github-skills-outline/SKILL.md", validator.check_skill_discovery),
+            (self.agent, validator.check_agents),
+        ):
+            for field in ("name", "description"):
+                for value in ("null", "42", "true", "[]", "{}", "''", "'   '", "|"):
+                    with self.subTest(path=path, field=field, value=value):
+                        validator.failures.clear()
+                        other = "description" if field == "name" else "name"
+                        path.write_text(f"---\n{field}: {value}\n{other}: valid-string\n---\n")
+                        check()
+                        self.assert_failure(f"field '{field}' must be a non-empty string")
 
     def test_missing_skills_directory_reports_failure(self):
         empty = self.root / "empty"
