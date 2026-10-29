@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g. 1.0.1). Must match .github/plugin/plugin.json version. Leave blank to use the manifest value."
+        description: "Release version (e.g. 3.0.1). Must match root plugin.json version. Leave blank to use the manifest value."
         required: false
         type: string
       prerelease:
@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
 
-          manifest_version=$(python3 -c 'import json; print(json.load(open(".github/plugin/plugin.json"))["version"])')
+          manifest_version=$(python3 -c 'import json; print(json.load(open("plugin.json"))["version"])')
           input_version="${INPUT_VERSION:-}"
           version="${input_version:-$manifest_version}"
           version="${version#v}"
@@ -78,11 +78,15 @@ jobs:
           echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
           echo "Releasing $tag from ${GITHUB_SHA}"
 
+      - name: Install validation dependencies
+        run: python3 -m pip install --quiet pyyaml
+
       - name: Run plugin validation
         run: |
-          python3 -m json.tool .github/plugin/plugin.json >/dev/null
+          python3 scripts/validate-content.py
+          python3 -m unittest discover -s scripts -p 'test_*.py'
           test -f README.md
-          test -d agents
+          test -d com.github.copilot/agents
           test -d skills
 
       - name: Create and push tag

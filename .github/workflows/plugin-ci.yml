@@ -16,99 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate plugin manifest JSON syntax
-        run: python3 -m json.tool .github/plugin/plugin.json >/dev/null
-
-      - name: Validate plugin references and skill metadata
-        run: |
-          python3 - <<'PY'
-          import json
-          import re
-          from pathlib import Path
-
-          root = Path(".").resolve()
-          manifest_path = root / ".github/plugin/plugin.json"
-          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-
-          failures = []
-
-          def resolve_repo_relative_path(entry, key_name):
-            if not isinstance(entry, str):
-              failures.append(f'Entries in "{key_name}" must be strings. Got: {type(entry).__name__}')
-              return None
-
-            rel_path = Path(entry)
-            if rel_path.is_absolute():
-              failures.append(f'Absolute paths are not allowed in "{key_name}": {entry}')
-              return None
-
-            resolved = (root / rel_path).resolve()
-            try:
-              resolved.relative_to(root)
-            except ValueError:
-              failures.append(f'Path escapes repository root in "{key_name}": {entry}')
-              return None
-
-            return resolved
-
-          def extract_frontmatter(markdown_text):
-            match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|$)", markdown_text, flags=re.DOTALL)
-            if not match:
-              return None
-            return match.group(1)
-
-          for key in ("agents", "skills"):
-            entries = manifest.get(key, [])
-            if not isinstance(entries, list):
-              failures.append(f'"{key}" must be a list in {manifest_path}')
-              continue
-            for entry in entries:
-              path = resolve_repo_relative_path(entry, key)
-              if path is None:
-                continue
-              if not path.exists():
-                failures.append(f'Missing referenced path in "{key}": {entry}')
-
-          for skill_entry in manifest.get("skills", []):
-            skill_dir = resolve_repo_relative_path(skill_entry, "skills")
-            if skill_dir is None:
-              continue
-            skill_md = skill_dir / "SKILL.md"
-            if not skill_md.exists():
-              failures.append(f'Missing SKILL.md in skill directory: {skill_entry}')
-              continue
-
-            text = skill_md.read_text(encoding="utf-8")
-            frontmatter = extract_frontmatter(text)
-            if frontmatter is None:
-              failures.append(f'SKILL.md is missing frontmatter block in {skill_entry}')
-              continue
-
-            keys = set()
-            for line in frontmatter.splitlines():
-              line = line.strip()
-              if not line or line.startswith("#") or ":" not in line:
-                continue
-              key, _ = line.split(":", 1)
-              keys.add(key.strip())
-
-            if "name" not in keys or "description" not in keys:
-              failures.append(f'SKILL.md is missing required frontmatter fields in {skill_entry}')
-
-          if failures:
-            print("Validation failures:")
-            for failure in failures:
-              print(f"- {failure}")
-            raise SystemExit(1)
-
-          print("Plugin reference validation passed.")
-          PY
-
       - name: Install validation dependencies
         run: python3 -m pip install --quiet pyyaml
 
-      - name: Validate plugin content consistency
+      - name: Validate manifest, component discovery and content consistency
         run: python3 scripts/validate-content.py --online
+
+      - name: Test packaging validation
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Validate README local markdown links
         run: |
