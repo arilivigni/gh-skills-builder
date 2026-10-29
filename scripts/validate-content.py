@@ -22,6 +22,8 @@ import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+AGENT_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+AGENT_DIRECTORY = Path("com.github.copilot/agents")
 
 CANONICAL_BADGES = {
     "chat-prompt": "https://img.shields.io/badge/Prompt-text?style=for-the-badge&logo=github-copilot&logoColor=white&labelColor=purple&color=purple",
@@ -70,43 +72,118 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def contained_component(path: Path, check: str) -> bool:
+    try:
+        path.resolve().relative_to(ROOT.resolve())
+    except (ValueError, OSError, RuntimeError) as error:
+        fail(check, f"{path.relative_to(ROOT)}: path must resolve within the plugin root ({error})")
+        return False
+    return True
+
+
 def frontmatter(text: str) -> str | None:
     match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|$)", text, flags=re.DOTALL)
     return match.group(1) if match else None
 
 
-def frontmatter_keys(block: str) -> dict[str, str]:
-    values = {}
-    for line in block.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or ":" not in stripped:
-            continue
-        key, value = stripped.split(":", 1)
-        values[key.strip()] = value.strip().strip('"').strip("'")
+def frontmatter_metadata(block: str, path: Path, check: str) -> dict[str, str] | None:
+    try:
+        import yaml
+    except ImportError:
+        fail(check, "PyYAML is not installed; cannot validate frontmatter")
+        return None
+
+    rel = path.relative_to(ROOT)
+    try:
+        metadata = yaml.safe_load(block)
+    except yaml.YAMLError as error:
+        fail(check, f"{rel}: frontmatter does not parse: {error}")
+        return None
+    if not isinstance(metadata, dict):
+        fail(check, f"{rel}: frontmatter must be a YAML mapping")
+        return None
+
+    values: dict[str, str] = {}
+    for field in ("name", "description"):
+        if field not in metadata:
+            fail(check, f"{rel}: missing required field '{field}'")
+        elif not isinstance(metadata[field], str) or not metadata[field].strip():
+            fail(check, f"{rel}: field '{field}' must be a non-empty string")
+        else:
+            values[field] = metadata[field]
     return values
 
 
+def check_manifest() -> None:
+    """Validate the closed Agent Plugins v1.0.0 manifest without network access."""
+    for legacy in (".github/plugin/plugin.json", ".plugin/plugin.json", ".claude-plugin/plugin.json"):
+        if (ROOT / legacy).exists():
+            fail("manifest", f"remove legacy manifest {legacy}; use root plugin.json")
+    if not contained_component(ROOT / "plugin.json", "manifest"):
+        return
+    try:
+        manifest = json.loads(read(ROOT / "plugin.json"))
+    except (OSError, ValueError) as error:
+        fail("manifest", f"cannot read root plugin.json: {error}")
+        return
+    if not isinstance(manifest, dict):
+        fail("manifest", "plugin.json must contain an object")
+        return
+
+    allowed = {
+        "$schema", "name", "version", "description", "author", "homepage",
+        "repository", "license", "keywords", "extensions",
+    }
+    for key in sorted(manifest.keys() - allowed):
+        fail("manifest", f"unknown top-level field '{key}'")
+    if manifest.get("$schema") != AGENT_PLUGIN_SCHEMA:
+        fail("manifest", f"$schema must be {AGENT_PLUGIN_SCHEMA}")
+    name = manifest.get("name")
+    if (not isinstance(name, str) or not 1 <= len(name) <= 64
+            or not re.fullmatch(r"(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", name)):
+        fail("manifest", "name must follow Agent Plugins naming constraints")
+    for key in ("version", "description", "homepage", "repository", "license"):
+        if key in manifest and not isinstance(manifest[key], str):
+            fail("manifest", f"{key} must be a string")
+    for key in ("version", "description"):
+        if not isinstance(manifest.get(key), str) or not manifest[key].strip():
+            fail("manifest", f"{key} must be non-empty for the marketplace listing")
+    if "author" in manifest:
+        author = manifest["author"]
+        if (not isinstance(author, dict) or set(author) - {"name", "email", "url"}
+                or any(not isinstance(value, str) for value in author.values())):
+            fail("manifest", "author may contain only name, email and url strings")
+    if "keywords" in manifest:
+        keywords = manifest["keywords"]
+        if not isinstance(keywords, list) or any(not isinstance(value, str) for value in keywords):
+            fail("manifest", "keywords must be an array of strings")
+    if "extensions" in manifest:
+        extensions = manifest["extensions"]
+        if not isinstance(extensions, dict) or any(not isinstance(value, dict) for value in extensions.values()):
+            fail("manifest", "extensions must map client namespaces to objects")
+
+
 def check_agents() -> None:
-    """Agent files are referenced only as a directory by plugin.json, so nothing
-    else validates their frontmatter. A malformed agent name has broken this
-    plugin before."""
-    agents = sorted(ROOT.glob("agents/*.agent.md"))
+    """Validate Copilot-specific agent discovery and frontmatter."""
+    if not contained_component(ROOT / AGENT_DIRECTORY, "agents"):
+        return
+    agents = sorted((ROOT / AGENT_DIRECTORY).glob("*.agent.md"))
     if not agents:
-        fail("agents", "no agent files found in agents/")
+        fail("agents", f"no agent files found in {AGENT_DIRECTORY}/")
         return
 
     for path in agents:
         rel = path.relative_to(ROOT)
+        if not contained_component(path, "agents"):
+            continue
         block = frontmatter(read(path))
         if block is None:
             fail("agents", f"{rel}: missing frontmatter block")
             continue
 
-        keys = frontmatter_keys(block)
-        for required in ("name", "description"):
-            if required not in keys:
-                fail("agents", f"{rel}: missing required frontmatter field '{required}'")
-
+        keys = frontmatter_metadata(block, path, "agents")
+        if keys is None:
+            continue
         name = keys.get("name")
         if name is None:
             continue
@@ -119,25 +196,40 @@ def check_agents() -> None:
             fail("agents", f"{rel}: agent name '{name}' does not match filename stem '{expected}'")
 
 
-def check_skill_registration() -> None:
-    """plugin.json referencing a missing skill is already covered by CI. The
-    reverse -- adding a skill and forgetting the manifest -- is not."""
-    manifest = json.loads(read(ROOT / ".github/plugin/plugin.json"))
-    registered = {Path(entry).name for entry in manifest.get("skills", [])}
-    on_disk = {p.parent.name for p in ROOT.glob("skills/*/SKILL.md")}
-
-    for name in sorted(on_disk - registered):
-        fail("skills", f"skills/{name} has a SKILL.md but is not registered in plugin.json")
+def check_skill_discovery() -> None:
+    """Skills are discovered from immediate children of skills/, not a manifest list."""
+    if not contained_component(ROOT / "skills", "skills"):
+        return
+    if not (ROOT / "skills").is_dir():
+        fail("skills", "missing skills/ directory")
+        return
+    for directory in sorted((ROOT / "skills").iterdir()):
+        if not directory.is_dir():
+            continue
+        path = directory / "SKILL.md"
+        if not contained_component(directory, "skills") or not contained_component(path, "skills"):
+            continue
+        if not path.is_file():
+            fail("skills", f"{directory.relative_to(ROOT)}: missing SKILL.md")
+            continue
+        block = frontmatter(read(path))
+        if block is None:
+            fail("skills", f"{path.relative_to(ROOT)}: missing frontmatter block")
+            continue
+        keys = frontmatter_metadata(block, path, "skills")
+        if keys is None:
+            continue
+        if keys.get("name") != directory.name:
+            fail("skills", f"{path.relative_to(ROOT)}: name must match skill directory")
 
 
 def check_lifecycle_topology() -> None:
-    manifest = json.loads(read(ROOT / ".github/plugin/plugin.json"))
-    expected_agent = Path("agents/github-skills-orchestrator.agent.md")
-    agents = {p.relative_to(ROOT) for p in ROOT.glob("agents/*.agent.md")}
+    expected_agent = AGENT_DIRECTORY / "github-skills-orchestrator.agent.md"
+    agents = {p.relative_to(ROOT) for p in (ROOT / AGENT_DIRECTORY).glob("*.agent.md")}
     if agents != {expected_agent}:
         fail("lifecycle", f"expected only {expected_agent}; found {sorted(str(p) for p in agents)}")
-    if manifest.get("agents") != ["./agents"]:
-        fail("lifecycle", "manifest must register the orchestrator via ./agents")
+    if (ROOT / "agents").exists():
+        fail("lifecycle", f"legacy agents/ is not discovered; use {AGENT_DIRECTORY}/")
 
     expected_skills = {
         "github-skills-orchestrate",
@@ -147,12 +239,10 @@ def check_lifecycle_topology() -> None:
         "github-skills-publish",
     }
     on_disk = {p.parent.name for p in ROOT.glob("skills/*/SKILL.md")}
-    registered = manifest.get("skills", [])
-    expected_paths = {f"./skills/{name}" for name in expected_skills}
-    if on_disk != expected_skills or set(registered) != expected_paths or len(registered) != 5:
-        fail("lifecycle", "expected exactly the five lifecycle skills on disk and in the manifest")
+    if on_disk != expected_skills:
+        fail("lifecycle", "expected exactly the five lifecycle skills under skills/")
 
-    paths = markdown_files() + [ROOT / "evals/evals.json", ROOT / ".github/plugin/plugin.json"]
+    paths = markdown_files() + [ROOT / "evals/evals.json"]
     agent_reference = re.compile(
         r"@github-skills-[a-z0-9]+(?:-[a-z0-9]+)*"
         r"|\bgithub-skills-(?:outline-architect|exercise-builder|quality-reviewer|publisher)\b"
@@ -531,8 +621,9 @@ def main() -> int:
     parser.add_argument("--online", action="store_true", help="also verify the pinned toolkit tag resolves")
     args = parser.parse_args()
 
+    check_manifest()
     check_agents()
-    check_skill_registration()
+    check_skill_discovery()
     check_lifecycle_topology()
     check_fence_balance()
     check_yaml_blocks()

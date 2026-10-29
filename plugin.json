@@ -1,7 +1,8 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "gh-skills-builder",
   "description": "Design, build, review, and publish GitHub Skills-style exercises with one coordinating agent and five Agent Skills for learner journeys, workflow-backed validation, and release readiness.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "keywords": [
     "github-skills",
     "education",
@@ -14,15 +15,5 @@
     "name": "Ari LiVigni"
   },
   "repository": "https://github.com/arilivigni/gh-skills-builder",
-  "license": "MIT",
-  "agents": [
-    "./agents"
-  ],
-  "skills": [
-    "./skills/github-skills-orchestrate",
-    "./skills/github-skills-outline",
-    "./skills/github-skills-bootstrap",
-    "./skills/github-skills-review",
-    "./skills/github-skills-publish"
-  ]
+  "license": "MIT"
 }
